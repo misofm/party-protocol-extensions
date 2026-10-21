@@ -4,11 +4,12 @@
 #[test_only]
 module platform_link::platform_link_tests;
 
-// Aliased so the bare `platform_link` name stays free for `location = …` below.
-use platform_link::platform_link as pl;
+// === Imports ===
+
 use std::bcs;
 use std::unit_test::assert_eq;
 use sui::event;
+use platform_link::platform_link as pl;
 
 /// Stand-in payloads for exercising generic storage and typed event streams.
 public struct FooData has copy, drop, store { v: u64 }
@@ -202,7 +203,7 @@ fun large_payload_is_emitted_in_full() {
     uid.delete();
 }
 
-#[test, expected_failure(abort_code = 0, location = platform_link::platform_link)] // ENoLink
+#[test, expected_failure(abort_code = pl::ENoLink)]
 fun borrow_missing_aborts() {
     let ctx = &mut tx_context::dummy();
     let uid = object::new(ctx);
@@ -210,7 +211,7 @@ fun borrow_missing_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = platform_link::platform_link)] // ENoLink
+#[test, expected_failure(abort_code = pl::ENoLink)]
 fun remove_missing_aborts() {
     let ctx = &mut tx_context::dummy();
     let mut uid = object::new(ctx);

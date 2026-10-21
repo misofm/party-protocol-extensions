@@ -1,28 +1,27 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// A party's editable profile card — the free-form identity fields a profile
+/// A party's editable profile card: the free-form identity fields a profile
 /// page renders.
 ///
-/// Stored as a single `Profile` dynamic field on the party's UID, gated by the
-/// `PartyAdminCap`; views are permissionless. Deliberately holds only cohesive
-/// identity fields — typed or collection-shaped concerns (roles, tags, genres,
-/// media, links) each live in their own extension. `country` and `languages` use
-/// validated code primitives (`country_code`, `language_code`), so a stored value
-/// is always a real code. The party's `name` is NOT duplicated here — it lives on
-/// the core `Party` (`party::set_name`) — and the join date comes from the party's
-/// creation event (the indexer has it for free). A changed set emits every
-/// profile field; a clear emits the party ID. Equal replacements and absent
-/// clears are silent.
+/// Stored as one `Profile` dynamic field on the party's UID, gated by the
+/// `PartyAdminCap`; views are permissionless. Roles, tags, genres, media and
+/// links each live in their own extension. `country` and `languages` use the
+/// validated `country_code` / `language_code` types. The party's name lives on
+/// the core `Party`, and the join date comes from its creation event. A changed
+/// set emits every profile field, a clear emits the party ID; equal
+/// replacements and absent clears are silent.
 module party_profile::party_profile;
 
-use country_code::country_code::CountryCode;
-use language_code::language_code::LanguageCode;
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use std::string::String;
 use sui::dynamic_field as df;
 use sui::event::emit;
 use sui::vec_set;
+use country_code::country_code::CountryCode;
+use language_code::language_code::LanguageCode;
+use miso_party::party::{Party, PartyAdminCap};
 
 // === Errors ===
 
@@ -45,22 +44,13 @@ const EDuplicateLanguage: u64 = 6;
 
 /// Maximum length of the short bio in bytes.
 const MAX_BIO_SHORT_LENGTH: u64 = 300;
-/// Maximum length of the long bio in bytes — 8 KB, matching
-/// `release_description`. A storage backstop, not an editorial limit: it sits
-/// well above any bio anyone is expected to write, because this package
-/// publishes immutable and a ceiling that turns out to be too low can never be
-/// raised, while one that is too high costs only the gas of the writer who
-/// fills it.
+/// Maximum length of the long bio in bytes (8 KB, matching
+/// `release_description`); a storage backstop, not an editorial limit.
 const MAX_BIO_LONG_LENGTH: u64 = 8192;
 /// Maximum number of language tags.
 const MAX_LANGUAGES: u64 = 10;
 
-// === Keys ===
-
-/// Dynamic-field key for a party's profile.
-public struct ProfileKey() has copy, drop, store;
-
-// === Types ===
+// === Structs ===
 
 /// A party's profile card. Held as a dynamic-field value, not a standalone
 /// object.
@@ -70,6 +60,9 @@ public struct Profile has store, drop {
     country: Option<CountryCode>,
     languages: vector<LanguageCode>,
 }
+
+/// Dynamic-field key for a party's profile.
+public struct ProfileKey() has copy, drop, store;
 
 // === Events ===
 
@@ -87,7 +80,7 @@ public struct PartyProfileClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Write API ===
+// === Public Functions ===
 
 /// Sets (creates or replaces) the party's whole profile. Validation happens
 /// before authorization. Emits the full profile when it changes; an initial
@@ -132,7 +125,7 @@ public fun clear_profile(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party has a profile.
 public fun has_profile(self: &Party): bool {
@@ -145,10 +138,25 @@ public fun profile(self: &Party): &Profile {
     df::borrow(self.uid(), ProfileKey())
 }
 
-public fun bio_short(self: &Profile): String { self.bio_short }
-public fun bio_long(self: &Profile): Option<String> { self.bio_long }
-public fun country(self: &Profile): Option<CountryCode> { self.country }
-public fun languages(self: &Profile): vector<LanguageCode> { self.languages }
+/// The profile's short bio.
+public fun bio_short(self: &Profile): String {
+    self.bio_short
+}
+
+/// The profile's long bio, if set.
+public fun bio_long(self: &Profile): Option<String> {
+    self.bio_long
+}
+
+/// The profile's country, if set.
+public fun country(self: &Profile): Option<CountryCode> {
+    self.country
+}
+
+/// The profile's language tags.
+public fun languages(self: &Profile): vector<LanguageCode> {
+    self.languages
+}
 
 // === Private Functions ===
 
@@ -157,8 +165,7 @@ fun validate_bio_short(bio_short: &String) {
     assert!(bio_short.length() <= MAX_BIO_SHORT_LENGTH, EBioShortTooLong);
 }
 
-// Each `LanguageCode` is already a valid ISO 639-1 code by construction, so
-// only the count and duplicates are checked here.
+// Codes are valid by construction; only count and duplicates are checked.
 fun validate_languages(languages: &vector<LanguageCode>) {
     assert!(languages.length() <= MAX_LANGUAGES, ETooManyLanguages);
     let mut seen = vec_set::empty<LanguageCode>();

@@ -3,44 +3,36 @@
 
 /// Profile imagery for a party, stored as a single Walrus quilt.
 ///
-/// All of a party's images (avatar, header/cover, …) live together in one Walrus
-/// quilt — batching them under a single storage reservation is markedly cheaper
-/// than one blob each, which matters when the platform sponsors storage. Only the
-/// quilt's blob id is held on-chain, as a `Media` dynamic field on the party's
-/// UID, gated by the `PartyAdminCap`; views are permissionless.
-///
-/// The chain is deliberately role-agnostic: which patch is the avatar vs the
-/// header is a client convention (quilt patch *identifiers*, e.g. "avatar" /
-/// "header"), derived off-chain — never stored here. Updating any image means
-/// re-storing the quilt and calling `set_media` with the new id.
-/// A changed set emits the new quilt id; a clear emits the party ID. Equal
-/// replacements and absent clears are silent.
+/// All of a party's images (avatar, header, ...) live in one quilt, which is
+/// cheaper than one blob each. Only the quilt's blob id is held on-chain, as a
+/// `Media` dynamic field gated by the `PartyAdminCap`; views are
+/// permissionless. Which patch is the avatar or header is a client convention
+/// (quilt patch identifiers), never stored here. A changed set emits the new
+/// quilt id, a clear emits the party ID; equal replacements and absent clears
+/// are silent.
 module party_media::party_media;
 
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use sui::dynamic_field as df;
 use sui::event::emit;
-
-// === Keys ===
-
-/// Dynamic-field key for a party's media.
-public struct MediaKey() has copy, drop, store;
+use miso_party::party::{Party, PartyAdminCap};
 
 // === Errors ===
 
-/// The quilt id was zero. Zero is never a real Walrus blob id — almost
-/// certainly a caller bug, and indistinguishable from "unset" downstream.
+/// The quilt id was zero, which is never a real Walrus blob id.
 const EZeroQuilt: u64 = 0;
 
-// === Types ===
+// === Structs ===
 
 /// A party's imagery. Held as a dynamic-field value.
 public struct Media has store, drop {
-    /// Walrus quilt blob id holding all of the party's images. Individual images
-    /// are quilt patches addressed by identifier ("avatar", "header", …); those
-    /// roles are a client convention, derived off-chain, not stored here.
+    /// Walrus quilt blob id holding all of the party's images.
     quilt: u256,
 }
+
+/// Dynamic-field key for a party's media.
+public struct MediaKey() has copy, drop, store;
 
 // === Events ===
 
@@ -55,7 +47,7 @@ public struct MediaClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Write API ===
+// === Public Functions ===
 
 /// Sets (or replaces) the party's media quilt. Aborts on a zero id before
 /// authorization. Emits the new id when it changes; an equal id is silent.
@@ -84,7 +76,7 @@ public fun clear_media(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party has media set.
 public fun has_media(self: &Party): bool {

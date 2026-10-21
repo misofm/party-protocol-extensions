@@ -1,9 +1,9 @@
 # Release Audit — `party_genre`
 
 **Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** pending working-tree source on `main` (matches the repository's current `HEAD`)
-**Date:** 2026-09-02
-**Toolchain:** `sui 1.78.1-722ac4fcf484`
+**Audit target:** `main`
+**Reviewed:** 2026-09-02 with `sui 1.78.1-722ac4fcf484`
+**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
 
 ## Verdict
 
@@ -28,13 +28,15 @@ The manifest has no local-path or floating dependencies.
 
 ## Verification
 
-- Package tests: **7/7**, including **5** expected-failure paths for duplicate,
-  missing item, capacity, wrong cap, and authorization-before-capacity.
+- Package tests: **15/15**, including **13** expected-failure paths for
+  duplicate, missing item, capacity, duplicate-before-capacity, and wrong-cap
+  add/remove/clear authorization.
 - Production instruction coverage: **100.00%**.
 - End-to-end scenario covers the shared genre registry, immutable Genre,
   shared Party, transferred admin cap, cap-gated write, and later public read.
-- Repository aggregate: **77/77 tests on Testnet and 77/77 on Mainnet**, strict
-  lint with warnings as errors; all 11 production modules are at **100.00%**.
+- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
+  packages with zero warnings, strict Mainnet and Testnet builds; all 11
+  production modules at **100.00%**.
 
 ## Published metadata
 

@@ -4,20 +4,17 @@
 #[test_only]
 module party_genre::party_genre_tests;
 
-use genre::genre as g;
-use genre::genre::{GenreRegistry, Genre};
-use miso_party::party;
-// Aliased so the bare `party_genre` name stays free for `location = …`.
-use party_genre::party_genre as pg;
+// === Imports ===
+
 use std::unit_test::{assert_eq, destroy};
 use sui::event;
 use sui::test_scenario::{Self as ts, Scenario};
+use genre::genre::{Self as g, GenreRegistry, Genre};
+use miso_party::party;
+use party_genre::party_genre as pg;
 
 const CREATOR: address = @0xC0;
 const MAX_GENRES: u64 = 20;
-
-// Mirrors `party::EUnauthorized` (party.move) for the wrong-cap abort test.
-const EUnauthorized: u64 = 0;
 
 // === Helpers ===
 
@@ -60,10 +57,7 @@ fun fill_genres_from(
 }
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 /// A fresh, unique id that is NOT a real genre (for negative cases).
@@ -252,7 +246,7 @@ fun shared_party_genre_workflow() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun rejects_duplicate() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -267,7 +261,8 @@ fun rejects_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem takes precedence
+/// The duplicate check runs before the capacity check.
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -283,7 +278,7 @@ fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun wrong_cap_duplicate_on_full_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -300,7 +295,7 @@ fun wrong_cap_duplicate_on_full_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_absent_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -315,7 +310,7 @@ fun remove_absent_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = 2, location = typed_set::typed_set)] // EMaxItemsExceeded
+#[test, expected_failure(abort_code = typed_set::typed_set::EMaxItemsExceeded)]
 fun rejects_over_max() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -348,7 +343,7 @@ fun rejects_over_max() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_from_missing_field_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -358,7 +353,7 @@ fun remove_from_missing_field_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_present_member_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -374,7 +369,7 @@ fun remove_with_wrong_cap_and_present_member_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_member_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -390,7 +385,7 @@ fun remove_with_wrong_cap_and_missing_member_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -401,7 +396,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -417,7 +412,7 @@ fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -428,7 +423,7 @@ fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_genre_with_wrong_cap_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -445,7 +440,7 @@ fun add_genre_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_genre_with_wrong_cap_on_full_set_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());

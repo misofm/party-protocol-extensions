@@ -62,9 +62,10 @@ and [README.md](README.md) for the architecture and package overview.
    [EVENT_PAYLOADS.md](EVENT_PAYLOADS.md).
 9. **Tests:** happy path and each validation abort. Every state-attaching
    extension also needs a wrong-cap test
-   (`expected_failure(abort_code = EUnauthorized, location = miso_party::party)`
-   — mirror the constant locally). Set-mechanics aborts assert `typed_set`'s
-   codes at `location = typed_set::typed_set`.
+   (`expected_failure(abort_code = party::EUnauthorized)`). Reference real
+   constants, including `typed_set::typed_set::EDuplicateItem` and friends for
+   set-mechanics aborts; use `location =` only for aborts without a named
+   constant.
 10. **Document** (below): package README, root README row, ROADMAP row.
 11. **Verify:** strict Testnet and Mainnet lint builds plus
     `sui move test --coverage`; every production module must report 100%
@@ -148,3 +149,12 @@ the package aspirationally and reality differs, the roadmap loses — update it.
   the docs are wrong, always.
 - Never document a function that does not exist; never leave a documented
   behavior unverified (`sui move test` green is the bar).
+
+## Move layout
+
+- Sections in order: Imports, Errors, Constants, Structs, Enums, Events,
+  Method Aliases, Public Functions, View Functions, Private Functions, Test
+  Functions (`// === Name ===`). Dynamic-field keys come last in Structs.
+- Imports in one block ordered std, sui, external packages, this package.
+- Errors are plain `u64` constants numbered from 0 in declaration order.
+- Lines stay within 100 columns; doc comments stay short.

@@ -4,9 +4,11 @@
 #[test_only]
 module party_music::party_music_tests;
 
-use party_music::party_music as music;
+// === Imports ===
+
 use std::unit_test::assert_eq;
 use sui::event;
+use party_music::party_music as music;
 
 #[test]
 fun added_platform_constructors() {
@@ -28,19 +30,19 @@ fun constructors_wrap_ids() {
     assert_eq!(event::num_events(), events_before);
 }
 
-#[test, expected_failure(abort_code = 0, location = party_music::party_music)] // EEmptyId
+#[test, expected_failure(abort_code = music::EEmptyId)]
 fun rejects_empty_spotify_id() {
     let _ = music::spotify(b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = party_music::party_music)] // EEmptyId
+#[test, expected_failure(abort_code = music::EEmptyId)]
 fun rejects_empty_bandcamp_subdomain() {
     let _ = music::bandcamp(b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_music::party_music)] // EIdTooLong
+#[test, expected_failure(abort_code = music::EIdTooLong)]
 fun rejects_overlong_id() {
     // 257 bytes — one over the shared backstop (platform_link::max_identifier_length(), 256).
     let long = vector::tabulate!(257, |_| 97u8).to_string();

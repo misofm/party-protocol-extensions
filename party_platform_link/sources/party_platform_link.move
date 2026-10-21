@@ -14,10 +14,12 @@
 /// `PlatformLinkRemovedEvent<Data>` (party ID); this module emits none itself.
 module party_platform_link::party_platform_link;
 
+// === Imports ===
+
 use miso_party::party::{Party, PartyAdminCap};
 use platform_link::platform_link::{Self, PlatformLink};
 
-// === Write API ===
+// === Public Functions ===
 
 /// Sets (or replaces) a platform's link on the party. The primitive emits one
 /// `PlatformLinkSetEvent<Data>` with the new payload; an equal replacement is
@@ -34,15 +36,13 @@ public fun set_link<Data: copy + drop + store>(
 /// the existence check. A present link delegates to the primitive, which emits
 /// one `PlatformLinkRemovedEvent<Data>`; absent and repeated clears are silent.
 public fun clear_link<Data: copy + drop + store>(self: &mut Party, cap: &PartyAdminCap) {
-    // Cap-gate first: a wrong cap must abort even when no link is present, so
-    // authorization never depends on state the caller can't be sure of.
     let uid = self.uid_mut(cap);
     if (platform_link::exists_<Data>(uid)) {
         platform_link::clear<Data>(uid);
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party has a link for this platform.
 public fun has_link<Data: copy + drop + store>(self: &Party): bool {

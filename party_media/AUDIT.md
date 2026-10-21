@@ -1,9 +1,9 @@
 # Release Audit — `party_media`
 
 **Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** pending working-tree source on `codex/rich-events`
-**Date:** 2026-09-11
-**Toolchain:** `sui 1.79.0-46f18562f1f5`
+**Audit target:** `main`
+**Reviewed:** 2026-09-11 with `sui 1.79.0-46f18562f1f5`
+**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
 
 ## Verdict
 
@@ -37,6 +37,10 @@ The manifest has no local-path or floating dependencies.
 - End-to-end scenario covers Party share, cap transfer, later cap-gated media
   write, and permissionless read from the shared Party, with views confirmed
   event-silent.
+- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
+  packages with zero warnings, strict Mainnet and Testnet builds; all 11
+  production modules at **100.00%**.
+
 ## Published metadata
 
 The retained `Published.toml` is the sole record of the prior immutable Testnet package id;

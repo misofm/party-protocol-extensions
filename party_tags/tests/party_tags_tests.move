@@ -4,22 +4,19 @@
 #[test_only]
 module party_tags::party_tags_tests;
 
-use miso_party::party;
-use party_tags::party_tags as tags;
+// === Imports ===
+
+use std::unit_test::{assert_eq, destroy};
 use sui::bcs;
 use sui::event;
-use std::unit_test::{assert_eq, destroy};
 use sui::test_scenario::{Self as ts};
+use miso_party::party;
+use party_tags::party_tags as tags;
 
-// Mirrors `party::EUnauthorized` (party.move) for the wrong-cap abort test.
-const EUnauthorized: u64 = 0;
 const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 fun bytes_of_len(len: u64, seed: u8): vector<u8> {
@@ -83,7 +80,7 @@ fun shared_party_tags_workflow() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = 0, location = party_tags::party_tags)] // EEmptyTag
+#[test, expected_failure(abort_code = tags::EEmptyTag)]
 fun rejects_empty() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -91,7 +88,7 @@ fun rejects_empty() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_tags::party_tags)] // ETagTooLong
+#[test, expected_failure(abort_code = tags::ETagTooLong)]
 fun rejects_overlong_tag() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -100,7 +97,7 @@ fun rejects_overlong_tag() {
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun rejects_duplicate() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -109,7 +106,7 @@ fun rejects_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_absent_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -118,7 +115,7 @@ fun remove_absent_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = 2, location = typed_set::typed_set)] // EMaxItemsExceeded
+#[test, expected_failure(abort_code = typed_set::typed_set::EMaxItemsExceeded)]
 fun rejects_over_max() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -130,7 +127,7 @@ fun rejects_over_max() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_tag_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -141,7 +138,7 @@ fun add_tag_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_tag_with_wrong_cap_on_full_set_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -253,7 +250,8 @@ fun views_are_silent_and_preserve_exact_utf8_whitespace_and_case() {
     assert_eq!(event::num_events(), before + 3);
 
     let stored = tags::tags(&p);
-    assert_eq!(stored, vector[b"Ambient".to_string(), b" ambient ".to_string(), std::string::utf8(vector[99, 97, 102, 0xc3, 0xa9])]);
+    let cafe = vector[99, 97, 102, 0xc3, 0xa9].to_string();
+    assert_eq!(stored, vector[b"Ambient".to_string(), b" ambient ".to_string(), cafe]);
     assert!(tags::has_tag(&p, b"Ambient".to_string()));
     assert!(tags::has_tag(&p, b" ambient ".to_string()));
     assert!(tags::has_tag(&p, std::string::utf8(vector[99, 97, 102, 0xc3, 0xa9])));
@@ -285,7 +283,7 @@ fun transferred_cap_can_add_tag() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_present_tag_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -295,7 +293,7 @@ fun remove_with_wrong_cap_and_present_tag_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_tag_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -305,7 +303,7 @@ fun remove_with_wrong_cap_and_missing_tag_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -314,7 +312,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_present_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -324,7 +322,7 @@ fun clear_with_wrong_cap_and_present_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -333,7 +331,8 @@ fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = party_tags::party_tags)] // EEmptyTag validates before auth.
+/// Tag validation runs before authorization.
+#[test, expected_failure(abort_code = tags::EEmptyTag)]
 fun empty_tag_with_wrong_cap_aborts_as_empty() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -342,7 +341,8 @@ fun empty_tag_with_wrong_cap_aborts_as_empty() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_tags::party_tags)] // ETagTooLong validates before auth.
+/// Tag validation runs before authorization.
+#[test, expected_failure(abort_code = tags::ETagTooLong)]
 fun overlong_tag_with_wrong_cap_aborts_as_too_long() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -351,7 +351,8 @@ fun overlong_tag_with_wrong_cap_aborts_as_too_long() {
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem must beat capacity.
+/// The duplicate check runs before the capacity check.
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -360,7 +361,8 @@ fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent on a missing field.
+/// Removing from a party with no tag field aborts in `typed_set`.
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_from_missing_field_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);

@@ -4,9 +4,11 @@
 #[test_only]
 module party_social::party_social_tests;
 
-use party_social::party_social as social;
+// === Imports ===
+
 use std::unit_test::assert_eq;
 use sui::event;
+use party_social::party_social as social;
 
 #[test]
 fun added_platform_constructors() {
@@ -38,19 +40,19 @@ fun constructors_wrap_handles() {
     assert_eq!(event::num_events(), events_before);
 }
 
-#[test, expected_failure(abort_code = 0, location = party_social::party_social)] // EEmptyHandle
+#[test, expected_failure(abort_code = social::EEmptyHandle)]
 fun rejects_empty_x_handle() {
     let _ = social::x(b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = party_social::party_social)] // EEmptyHandle
+#[test, expected_failure(abort_code = social::EEmptyHandle)]
 fun rejects_empty_instagram_handle() {
     let _ = social::instagram(b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_social::party_social)] // EHandleTooLong
+#[test, expected_failure(abort_code = social::EHandleTooLong)]
 fun rejects_overlong_handle() {
     // 257 bytes — one over the shared backstop (platform_link::max_identifier_length(), 256).
     let long = vector::tabulate!(257, |_| 97u8).to_string();

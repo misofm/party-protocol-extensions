@@ -1,26 +1,22 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Musical-genre tags for a party, piggybacking the Miso genre vocabulary.
+/// Musical-genre tags for a party, drawn from the Miso genre vocabulary.
 ///
-/// Stores a set of `genre::Genre` object ids — the same canonical, name-derived
-/// genres the shared vocabulary primitive mints, so a party's genres reference
-/// exactly the ids releases (and anything else) use. Adding a genre takes a
-/// `&Genre`, proving the id is a real vocabulary entry; removal is by id. Genre
-/// is presentation, not protocol-verifiable state, so a party's genres are a
-/// lightweight display tag list — no primary/secondary ranking, no anti-churn
-/// locks. The set mechanics — storage, duplicate and capacity checks, field
-/// reclamation — live in the shared `typed_set` primitive; this package keeps
-/// the vocabulary proof, the capacity, and the typed events. Duplicate /
-/// not-present / over-max aborts come from `typed_set` with its own error
-/// codes. All writes are gated by the `PartyAdminCap`; views are
-/// permissionless.
+/// Stores a set of `genre::Genre` ids, the same canonical ids releases use.
+/// Adding takes a `&Genre`, proving the id is a real vocabulary entry; removal
+/// is by id. Genres are a display tag list with no ranking. Set mechanics
+/// (storage, duplicate and capacity checks, field reclamation) live in
+/// `typed_set`, whose error codes surface on duplicate, missing and over-max
+/// writes. Writes are gated by the `PartyAdminCap`; views are permissionless.
 module party_genre::party_genre;
 
-use genre::genre::Genre;
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use std::string::String;
 use sui::event::emit;
+use genre::genre::Genre;
+use miso_party::party::{Party, PartyAdminCap};
 use typed_set::typed_set as set;
 
 // === Constants ===
@@ -28,7 +24,7 @@ use typed_set::typed_set as set;
 /// Maximum number of genres a party may carry.
 const MAX_GENRES: u64 = 20;
 
-// === Keys ===
+// === Structs ===
 
 /// Dynamic-field key for a party's genre set, stored as a `VecSet<ID>` and
 /// managed through `typed_set`.
@@ -54,7 +50,7 @@ public struct GenresClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Write API ===
+// === Public Functions ===
 
 /// Adds a genre to the party. Takes `&Genre` so only a real vocabulary entry
 /// can be tagged. Aborts in `typed_set` if already present or the max is
@@ -84,7 +80,7 @@ public fun clear_genres(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party carries any genres.
 public fun has_genres(self: &Party): bool {

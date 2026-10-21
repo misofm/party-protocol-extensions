@@ -4,21 +4,20 @@
 #[test_only]
 module party_platform_link::party_platform_link_tests;
 
-use miso_party::party;
-use party_platform_link::party_platform_link as links;
-use party_social::party_social::{Self as social, XData, InstagramData};
-use platform_link::platform_link as primitive;
+// === Imports ===
+
 use std::unit_test::{assert_eq, destroy};
 use sui::event;
 use sui::test_scenario::{Self as ts};
+use miso_party::party;
+use party_social::party_social::{Self as social, XData, InstagramData};
+use platform_link::platform_link::{Self as primitive, PlatformLinkRemovedEvent};
+use party_platform_link::party_platform_link as links;
 
 const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 #[test]
@@ -47,11 +46,10 @@ fun x_and_instagram_events_keep_distinct_parties_and_types() {
     assert_eq!(event_parent_id, instagram_parent_id);
     assert_eq!(event_data.handle(), b"miso.fm".to_string());
 
-
     links::clear_link<XData>(&mut x_party, &x_cap);
     links::clear_link<InstagramData>(&mut instagram_party, &instagram_cap);
-    let x_removed = event::events_by_type<primitive::PlatformLinkRemovedEvent<XData>>();
-    let instagram_removed = event::events_by_type<primitive::PlatformLinkRemovedEvent<InstagramData>>();
+    let x_removed = event::events_by_type<PlatformLinkRemovedEvent<XData>>();
+    let instagram_removed = event::events_by_type<PlatformLinkRemovedEvent<InstagramData>>();
     assert_eq!(x_removed.length(), 1);
     assert_eq!(instagram_removed.length(), 1);
     assert_eq!(primitive::removed_event_fields(&x_removed[0]), x_parent_id);

@@ -1,9 +1,9 @@
 # Release Audit — `party_cta`
 
 **Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `party_cta` source at implementation commit `5567df3`
-**Date:** 2026-09-11
-**Toolchain:** `sui 1.79.0-46f18562f1f5`
+**Audit target:** `main`
+**Reviewed:** 2026-09-11 with `sui 1.79.0-46f18562f1f5`
+**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
 
 ## Verdict
 
@@ -36,11 +36,9 @@ The manifest has no local-path or floating dependencies.
 - Production instruction coverage: **100.00%**.
 - End-to-end scenario: Party creation and share, cap transfer, later cap-gated
   write to the shared Party, and permissionless read in another transaction.
-- Historical repository aggregate (not this package review): **77/77 tests on
-  Testnet and 77/77 on Mainnet**, with all 11 production modules at
-  **100.00%**.
-- Historical fresh-unpublished-copy strict-build claim (not re-run for this
-  review): fresh copies built strictly for both networks.
+- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
+  packages with zero warnings, strict Mainnet and Testnet builds; all 11
+  production modules at **100.00%**.
 
 ## Published metadata
 

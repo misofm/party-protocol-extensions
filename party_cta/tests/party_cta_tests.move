@@ -4,21 +4,18 @@
 #[test_only]
 module party_cta::party_cta_tests;
 
-use miso_party::party;
-use party_cta::party_cta as cta;
+// === Imports ===
+
 use std::unit_test::{assert_eq, destroy};
 use sui::event;
 use sui::test_scenario::{Self as ts};
+use miso_party::party;
+use party_cta::party_cta as cta;
 
-// Mirrors `party::EUnauthorized` (party.move) for the wrong-cap abort test.
-const EUnauthorized: u64 = 0;
 const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 #[test]
@@ -245,33 +242,33 @@ fun constructors_and_views_emit_no_events() {
     destroy(cap);
 }
 
-#[test, expected_failure(abort_code = 0, location = party_cta::party_cta)] // EEmptyLabel
+#[test, expected_failure(abort_code = cta::EEmptyLabel)]
 fun rejects_empty_label() {
     let _ = cta::new_cta(b"".to_string(), b"https://x.com".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 2, location = party_cta::party_cta)] // EEmptyUrl
+#[test, expected_failure(abort_code = cta::EEmptyUrl)]
 fun rejects_empty_url() {
     let _ = cta::new_cta(b"Listen".to_string(), b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_cta::party_cta)] // ELabelTooLong
+#[test, expected_failure(abort_code = cta::ELabelTooLong)]
 fun rejects_overlong_label() {
     let label = vector::tabulate!(61, |_| 97u8).to_string();
     let _ = cta::new_cta(label, b"https://x.com".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 3, location = party_cta::party_cta)] // EUrlTooLong
+#[test, expected_failure(abort_code = cta::EUrlTooLong)]
 fun rejects_overlong_url() {
     let url = vector::tabulate!(2001, |_| 97u8).to_string();
     let _ = cta::new_cta(b"Listen".to_string(), url);
     abort
 }
 
-#[test, expected_failure(abort_code = 4, location = party_cta::party_cta)] // ETooManyCtas
+#[test, expected_failure(abort_code = cta::ETooManyCtas)]
 fun rejects_over_max() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -281,7 +278,7 @@ fun rejects_over_max() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun set_ctas_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -294,7 +291,7 @@ fun set_ctas_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun set_ctas_replace_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -310,7 +307,7 @@ fun set_ctas_replace_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun set_ctas_equal_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -326,7 +323,7 @@ fun set_ctas_equal_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_ctas_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -338,7 +335,7 @@ fun clear_ctas_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_absent_ctas_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -349,7 +346,7 @@ fun clear_absent_ctas_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = 4, location = party_cta::party_cta)]
+#[test, expected_failure(abort_code = cta::ETooManyCtas)]
 fun over_max_precedes_wrong_cap_authorization() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);

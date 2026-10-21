@@ -1,26 +1,23 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Off-Miso call-to-action links for a party — the "what do you want people to
-/// do" row (Tickets, Merch, Newsletter, external Listen, …).
+/// Off-Miso call-to-action links for a party (Tickets, Merch, Newsletter,
+/// external Listen, ...).
 ///
-/// Deliberately slim: a CTA is just a `{ label, url }`. On-Miso actions
-/// (collect / listen-on-Miso / pin) are a different, interactive concern and
-/// live in `party_featured`, which references object ids and can render live
-/// state — so this package stays a plain, dependency-light external link hub.
-///
-/// The CTAs are an ordered list: **position is priority**. The whole list is
-/// written at once (`set_ctas`) — the natural fit for a drag-to-reorder editor
-/// that saves on submit — so there are no per-entry ids to track. Gated by the
-/// `PartyAdminCap`; views are permissionless. A changed write emits the full new
-/// list; a clear emits the party ID. Equal replacements and absent clears are
+/// A CTA is a plain `{ label, url }`; on-Miso actions live in `party_featured`.
+/// The CTAs are an ordered list where position is priority, written whole with
+/// `set_ctas`, so there are no per-entry ids. Writes are gated by the
+/// `PartyAdminCap`; views are permissionless. A changed write emits the full
+/// list, a clear emits the party ID; equal replacements and absent clears are
 /// silent.
 module party_cta::party_cta;
 
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use std::string::String;
 use sui::dynamic_field as df;
 use sui::event::emit;
+use miso_party::party::{Party, PartyAdminCap};
 
 // === Errors ===
 
@@ -44,18 +41,16 @@ const MAX_URL_LENGTH: u64 = 2000;
 /// Maximum number of CTAs on a party.
 const MAX_CTAS: u64 = 20;
 
-// === Keys ===
-
-/// Dynamic-field key for a party's ordered CTA list.
-public struct CtasKey() has copy, drop, store;
-
-// === Types ===
+// === Structs ===
 
 /// A single call-to-action: a labeled external link.
 public struct Cta has copy, drop, store {
     label: String,
     url: String,
 }
+
+/// Dynamic-field key for a party's ordered CTA list.
+public struct CtasKey() has copy, drop, store;
 
 // === Events ===
 
@@ -70,7 +65,7 @@ public struct CtasClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Constructor / accessors ===
+// === Public Functions ===
 
 /// Builds a CTA. Aborts if the label or url is empty or too long. Callers build
 /// the ordered `vector<Cta>` client-side and submit it with `set_ctas`.
@@ -81,18 +76,6 @@ public fun new_cta(label: String, url: String): Cta {
     assert!(url.length() <= MAX_URL_LENGTH, EUrlTooLong);
     Cta { label, url }
 }
-
-/// The CTA's display label.
-public fun label(self: &Cta): String {
-    self.label
-}
-
-/// The CTA's destination url.
-public fun url(self: &Cta): String {
-    self.url
-}
-
-// === Write API ===
 
 /// Sets (or replaces) the party's ordered CTA list. Position is priority.
 /// Length is checked before authorization. Emits the full list when it changes;
@@ -122,7 +105,7 @@ public fun clear_ctas(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party has a CTA list.
 public fun has_ctas(self: &Party): bool {
@@ -133,6 +116,16 @@ public fun has_ctas(self: &Party): bool {
 public fun ctas(self: &Party): vector<Cta> {
     if (!df::exists(self.uid(), CtasKey())) return vector[];
     *df::borrow<CtasKey, vector<Cta>>(self.uid(), CtasKey())
+}
+
+/// The CTA's display label.
+public fun label(self: &Cta): String {
+    self.label
+}
+
+/// The CTA's destination url.
+public fun url(self: &Cta): String {
+    self.url
 }
 
 // === Test Functions ===

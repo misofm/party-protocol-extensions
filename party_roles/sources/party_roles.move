@@ -1,27 +1,24 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Artist-type roles for a party — what kind of act this is (artist, producer,
-/// DJ, band, label, …). A party can hold several.
+/// Artist-type roles for a party: what kind of act it is (artist, producer,
+/// DJ, band, label, ...). A party can hold several.
 ///
 /// `ArtistRole` is a closed enum with a `Custom` escape hatch, mirroring
-/// `composition_party_role`: canonical variants give the frontend a fixed,
-/// typo-free set to render icons for, while `Custom(name)` covers anything else.
-/// The set mechanics — storage, duplicate and capacity checks, field
-/// reclamation — live in the shared `typed_set` primitive; this package keeps
-/// the role type, name validation, the capacity, and the typed events.
-/// Duplicate / not-present / over-max aborts come from `typed_set` with its own
-/// error codes. Gated by the `PartyAdminCap`; views are permissionless.
-/// Add/remove events carry the party ID and the `ArtistRole` value (custom name
-/// included); a populated clear carries the party ID.
+/// `composition_party_role`. Set mechanics (storage, duplicate and capacity
+/// checks, field reclamation) live in `typed_set`, whose error codes surface on
+/// duplicate, missing and over-max writes; this package keeps the role type,
+/// name validation, the capacity and the events. Writes are gated by the
+/// `PartyAdminCap`; views are permissionless. Add/remove events carry the role,
+/// a populated clear carries the party ID.
 module party_roles::party_roles;
 
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use std::string::String;
 use sui::event::emit;
+use miso_party::party::{Party, PartyAdminCap};
 use typed_set::typed_set as set;
-
-public use fun role_name as ArtistRole.name;
 
 // === Errors ===
 
@@ -37,13 +34,13 @@ const MAX_CUSTOM_NAME_LENGTH: u64 = 60;
 /// Maximum number of roles a party may hold.
 const MAX_ROLES: u64 = 12;
 
-// === Keys ===
+// === Structs ===
 
 /// Dynamic-field key for a party's role set, stored as a `VecSet<ArtistRole>`
 /// and managed through `typed_set`.
 public struct RolesKey() has copy, drop, store;
 
-// === Types ===
+// === Enums ===
 
 /// The kind of act a party represents. Closed enum + `Custom` escape hatch.
 public enum ArtistRole has copy, drop, store {
@@ -79,15 +76,34 @@ public struct RolesClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Role constructors ===
+// === Method Aliases ===
 
+public use fun role_name as ArtistRole.name;
+
+// === Public Functions ===
+
+/// The `Artist` role.
 public fun artist(): ArtistRole { ArtistRole::Artist }
+
+/// The `Producer` role.
 public fun producer(): ArtistRole { ArtistRole::Producer }
+
+/// The `Dj` role.
 public fun dj(): ArtistRole { ArtistRole::Dj }
+
+/// The `Composer` role.
 public fun composer(): ArtistRole { ArtistRole::Composer }
+
+/// The `Songwriter` role.
 public fun songwriter(): ArtistRole { ArtistRole::Songwriter }
+
+/// The `Band` role.
 public fun band(): ArtistRole { ArtistRole::Band }
+
+/// The `Label` role.
 public fun label(): ArtistRole { ArtistRole::Label }
+
+/// The `Collective` role.
 public fun collective(): ArtistRole { ArtistRole::Collective }
 
 /// Builds a custom role. Aborts if empty or too long.
@@ -96,23 +112,6 @@ public fun custom(name: String): ArtistRole {
     assert!(name.length() <= MAX_CUSTOM_NAME_LENGTH, ECustomNameTooLong);
     ArtistRole::Custom(name)
 }
-
-/// The canonical name of a role (its own string for `Custom`).
-public fun role_name(self: &ArtistRole): String {
-    match (self) {
-        ArtistRole::Artist => b"Artist".to_string(),
-        ArtistRole::Producer => b"Producer".to_string(),
-        ArtistRole::Dj => b"DJ".to_string(),
-        ArtistRole::Composer => b"Composer".to_string(),
-        ArtistRole::Songwriter => b"Songwriter".to_string(),
-        ArtistRole::Band => b"Band".to_string(),
-        ArtistRole::Label => b"Label".to_string(),
-        ArtistRole::Collective => b"Collective".to_string(),
-        ArtistRole::Custom(name) => *name,
-    }
-}
-
-// === Write API ===
 
 /// Adds a role to the party. Aborts in `typed_set` if already held or the max
 /// is reached.
@@ -140,7 +139,7 @@ public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party holds any roles.
 public fun has_roles(self: &Party): bool {
@@ -155,6 +154,21 @@ public fun has_role(self: &Party, role: ArtistRole): bool {
 /// The party's roles.
 public fun roles(self: &Party): vector<ArtistRole> {
     set::keys(self.uid(), RolesKey())
+}
+
+/// The canonical name of a role (its own string for `Custom`).
+public fun role_name(self: &ArtistRole): String {
+    match (self) {
+        ArtistRole::Artist => b"Artist".to_string(),
+        ArtistRole::Producer => b"Producer".to_string(),
+        ArtistRole::Dj => b"DJ".to_string(),
+        ArtistRole::Composer => b"Composer".to_string(),
+        ArtistRole::Songwriter => b"Songwriter".to_string(),
+        ArtistRole::Band => b"Band".to_string(),
+        ArtistRole::Label => b"Label".to_string(),
+        ArtistRole::Collective => b"Collective".to_string(),
+        ArtistRole::Custom(name) => *name,
+    }
 }
 
 // === Test Functions ===

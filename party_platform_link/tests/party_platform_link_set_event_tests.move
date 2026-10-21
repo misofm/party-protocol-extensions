@@ -4,18 +4,17 @@
 #[test_only]
 module party_platform_link::party_platform_link_set_event_tests;
 
-use miso_party::party;
-use party_platform_link::party_platform_link as links;
-use party_social::party_social::{Self as social, XData};
-use platform_link::platform_link as primitive;
+// === Imports ===
+
 use std::unit_test::{assert_eq, destroy};
 use sui::event;
+use miso_party::party;
+use party_social::party_social::{Self as social, XData};
+use platform_link::platform_link as primitive;
+use party_platform_link::party_platform_link as links;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 #[test]

@@ -1,9 +1,9 @@
 # Release Audit — `party_music`
 
 **Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** pending working-tree source on `main` (matches the repository's current `HEAD`)
-**Date:** 2026-09-02
-**Toolchain:** `sui 1.78.1-722ac4fcf484`
+**Audit target:** `main`
+**Reviewed:** 2026-09-02 with `sui 1.78.1-722ac4fcf484`
+**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
 
 ## Verdict
 
@@ -35,8 +35,9 @@ Git pin and no floating dependency.
 - All eight constructors and all eight accessors execute on success.
 - Production instruction coverage: **100.00%**.
 - Shared-Party workflow: not applicable; this package is pure payload code.
-- Repository aggregate: **77/77 tests on Testnet and 77/77 on Mainnet**, strict
-  lint with warnings as errors; all 11 production modules are at **100.00%**.
+- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
+  packages with zero warnings, strict Mainnet and Testnet builds; all 11
+  production modules at **100.00%**.
 
 ## Published metadata
 

@@ -4,15 +4,15 @@
 #[test_only]
 module party_roles::party_roles_tests;
 
-use miso_party::party;
-use party_roles::party_roles as roles;
+// === Imports ===
+
 use std::unit_test::{assert_eq, destroy};
 use sui::bcs;
 use sui::event;
 use sui::test_scenario::{Self as ts};
+use miso_party::party;
+use party_roles::party_roles as roles;
 
-// Mirrors `party::EUnauthorized` (party.move) for the wrong-cap abort test.
-const EUnauthorized: u64 = 0;
 const OWNER: address = @0xA;
 
 fun bytes_of_len(len: u64, seed: u8): vector<u8> {
@@ -22,6 +22,11 @@ fun bytes_of_len(len: u64, seed: u8): vector<u8> {
         (len - 1).do!(|_| bytes.push_back(65));
     };
     bytes
+}
+
+/// A custom role named by the single byte `65 + i` ("A", "B", ...).
+fun custom_letter(i: u64): roles::ArtistRole {
+    roles::custom(vector[(65 + i) as u8].to_string())
 }
 
 fun multibyte_bytes(): vector<u8> {
@@ -34,10 +39,7 @@ fun multibyte_bytes(): vector<u8> {
 }
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    {
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
-        (p, cap)
-    }
+    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
 #[test]
@@ -98,20 +100,20 @@ fun shared_party_roles_workflow() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = 0, location = party_roles::party_roles)] // EEmptyCustomName
+#[test, expected_failure(abort_code = roles::EEmptyCustomName)]
 fun rejects_empty_custom() {
     let _ = roles::custom(b"".to_string());
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = party_roles::party_roles)] // ECustomNameTooLong
+#[test, expected_failure(abort_code = roles::ECustomNameTooLong)]
 fun rejects_overlong_custom() {
     let name = vector::tabulate!(61, |_| 97u8).to_string();
     let _ = roles::custom(name);
     abort
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun rejects_duplicate() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -120,7 +122,7 @@ fun rejects_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_absent_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -129,7 +131,7 @@ fun remove_absent_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = 2, location = typed_set::typed_set)] // EMaxItemsExceeded
+#[test, expected_failure(abort_code = typed_set::typed_set::EMaxItemsExceeded)]
 fun rejects_over_max() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -142,11 +144,11 @@ fun rejects_over_max() {
     roles::add_role(&mut p, &cap, roles::band());
     roles::add_role(&mut p, &cap, roles::label());
     roles::add_role(&mut p, &cap, roles::collective());
-    5u64.do!(|i| roles::add_role(&mut p, &cap, roles::custom(std::string::utf8(vector[((65 + i) as u8)]))));
+    5u64.do!(|i| roles::add_role(&mut p, &cap, custom_letter(i)));
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_role_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -157,7 +159,7 @@ fun add_role_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun add_role_with_wrong_cap_on_full_set_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -175,10 +177,10 @@ fun add_role_with_wrong_cap_on_full_set_aborts() {
     roles::add_role(&mut p, &cap, roles::band());
     roles::add_role(&mut p, &cap, roles::label());
     roles::add_role(&mut p, &cap, roles::collective());
-    4u64.do!(|i| roles::add_role(&mut p, &cap, roles::custom(std::string::utf8(vector[((65 + i) as u8)]))));
+    4u64.do!(|i| roles::add_role(&mut p, &cap, custom_letter(i)));
 
     // A cap for a different party must abort on authorization, not capacity.
-    roles::add_role(&mut p, &other_cap, roles::custom(std::string::utf8(vector[((65 + 4u64) as u8)])));
+    roles::add_role(&mut p, &other_cap, custom_letter(4));
     abort
 }
 
@@ -344,16 +346,17 @@ fun clear_repeated_is_silent_and_readd_emits() {
     destroy(cap);
 }
 
-#[test, expected_failure(abort_code = 0, location = typed_set::typed_set)] // EDuplicateItem must beat capacity.
+/// The duplicate check runs before the capacity check.
+#[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    12u64.do!(|i| roles::add_role(&mut p, &cap, roles::custom(bytes_of_len(1, (65 + i) as u8).to_string())));
+    12u64.do!(|i| roles::add_role(&mut p, &cap, custom_letter(i)));
     roles::add_role(&mut p, &cap, roles::custom(b"A".to_string()));
     abort
 }
 
-#[test, expected_failure(abort_code = 1, location = typed_set::typed_set)] // EItemNotPresent
+#[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_from_missing_field_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -361,7 +364,7 @@ fun remove_from_missing_field_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_present_role_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -371,7 +374,7 @@ fun remove_with_wrong_cap_and_present_role_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_role_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -381,7 +384,7 @@ fun remove_with_wrong_cap_and_missing_role_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -390,7 +393,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -400,7 +403,7 @@ fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
+#[test, expected_failure(abort_code = party::EUnauthorized)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);

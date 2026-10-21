@@ -1,9 +1,9 @@
 # Release Audit — `party_profile`
 
 **Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** pending working-tree source on `codex/rich-events`
-**Date:** 2026-09-11
-**Toolchain:** `sui 1.79.0`
+**Audit target:** `main`
+**Reviewed:** 2026-09-11 with `sui 1.79.0`
+**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
 
 ## Verdict
 
@@ -43,6 +43,9 @@ The manifest has no local-path or floating dependencies.
 - Strict fresh-copy lint builds with warnings as errors pass for both Testnet
   and Mainnet. Production instruction coverage is **100.00%** on both
   environments.
+- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
+  packages with zero warnings, strict Mainnet and Testnet builds; all 11
+  production modules at **100.00%**.
 
 ## Published metadata
 

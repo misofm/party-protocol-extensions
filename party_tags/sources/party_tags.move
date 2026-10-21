@@ -1,23 +1,23 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Free-form tags for a party — moods, scenes, and descriptors (e.g. "ambient",
-/// "deconstructed club", "leftfield pop").
+/// Free-form tags for a party: moods, scenes and descriptors (e.g. "ambient",
+/// "deconstructed club").
 ///
-/// The uncurated sibling to `party_genre`: genres reference a canonical, shared
-/// vocabulary; tags are whatever the artist types. The set mechanics — storage,
-/// duplicate and capacity checks, field reclamation — live in the shared
-/// `typed_set` primitive; this package keeps only what is tag-specific: length
-/// validation, the capacity, and the typed events. Duplicate / not-present /
-/// over-max aborts come from `typed_set` with its own error codes. Tags are
-/// stored as given (exact dedupe); normalization for search/display is a client
-/// concern. Gated by the `PartyAdminCap`; views are permissionless. Add/remove
-/// events carry the party ID and the tag; a populated clear carries the party ID.
+/// The uncurated sibling to `party_genre`. Set mechanics (storage, duplicate
+/// and capacity checks, field reclamation) live in `typed_set`, whose error
+/// codes surface on duplicate, missing and over-max writes; this package keeps
+/// length validation, the capacity and the events. Tags are stored as given
+/// (exact dedupe). Writes are gated by the `PartyAdminCap`; views are
+/// permissionless. Add/remove events carry the tag; a populated clear carries
+/// the party ID.
 module party_tags::party_tags;
 
-use miso_party::party::{Party, PartyAdminCap};
+// === Imports ===
+
 use std::string::String;
 use sui::event::emit;
+use miso_party::party::{Party, PartyAdminCap};
 use typed_set::typed_set as set;
 
 // === Errors ===
@@ -34,7 +34,7 @@ const MAX_TAG_LENGTH: u64 = 50;
 /// Maximum number of tags a party may carry.
 const MAX_TAGS: u64 = 30;
 
-// === Keys ===
+// === Structs ===
 
 /// Dynamic-field key for a party's tag set, stored as a `VecSet<String>` and
 /// managed through `typed_set`.
@@ -59,7 +59,7 @@ public struct TagsClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Write API ===
+// === Public Functions ===
 
 /// Adds a tag to the party. Aborts if empty or too long here, and in
 /// `typed_set` if already present or the max is reached.
@@ -90,7 +90,7 @@ public fun clear_tags(self: &mut Party, cap: &PartyAdminCap) {
     }
 }
 
-// === Views ===
+// === View Functions ===
 
 /// Whether the party carries any tags.
 public fun has_tags(self: &Party): bool {

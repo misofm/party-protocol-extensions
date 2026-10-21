@@ -12,17 +12,10 @@
 /// max-length backstop (`platform_link::max_identifier_length()`).
 module party_music::party_music;
 
-use platform_link::platform_link::{Self, PlatformLink};
-use std::string::String;
+// === Imports ===
 
-public use fun spotify_artist_id as SpotifyData.artist_id;
-public use fun bandcamp_subdomain as BandcampData.subdomain;
-public use fun soundcloud_username as SoundCloudData.username;
-public use fun apple_music_artist_id as AppleMusicData.artist_id;
-public use fun deezer_artist_id as DeezerData.artist_id;
-public use fun tidal_artist_id as TidalData.artist_id;
-public use fun amazon_music_artist_id as AmazonMusicData.artist_id;
-public use fun audiomack_username as AudiomackData.username;
+use std::string::String;
+use platform_link::platform_link::{Self, PlatformLink};
 
 // === Errors ===
 
@@ -31,7 +24,7 @@ const EEmptyId: u64 = 0;
 /// The id exceeded the maximum length.
 const EIdTooLong: u64 = 1;
 
-// === Types ===
+// === Structs ===
 
 /// A Spotify artist id (the id in `open.spotify.com/artist/{id}`).
 public struct SpotifyData has copy, drop, store { artist_id: String }
@@ -50,66 +43,110 @@ public struct AmazonMusicData has copy, drop, store { artist_id: String }
 /// An Audiomack username (the `{name}` in `audiomack.com/{name}`).
 public struct AudiomackData has copy, drop, store { username: String }
 
-// === Constructors ===
+// === Method Aliases ===
 
-/// Builds a Spotify artist link. Aborts if empty.
+public use fun spotify_artist_id as SpotifyData.artist_id;
+public use fun bandcamp_subdomain as BandcampData.subdomain;
+public use fun soundcloud_username as SoundCloudData.username;
+public use fun apple_music_artist_id as AppleMusicData.artist_id;
+public use fun deezer_artist_id as DeezerData.artist_id;
+public use fun tidal_artist_id as TidalData.artist_id;
+public use fun amazon_music_artist_id as AmazonMusicData.artist_id;
+public use fun audiomack_username as AudiomackData.username;
+
+// === Public Functions ===
+
+/// Builds a Spotify artist link. Aborts if empty or too long.
 public fun spotify(artist_id: String): PlatformLink<SpotifyData> {
     validate_id(&artist_id);
     platform_link::new(SpotifyData { artist_id })
 }
 
-/// Builds a Bandcamp link from an artist subdomain. Aborts if empty.
+/// Builds a Bandcamp link from an artist subdomain. Aborts if empty or too long.
 public fun bandcamp(subdomain: String): PlatformLink<BandcampData> {
     validate_id(&subdomain);
     platform_link::new(BandcampData { subdomain })
 }
 
-/// Builds a SoundCloud link from a username. Aborts if empty.
+/// Builds a SoundCloud link from a username. Aborts if empty or too long.
 public fun soundcloud(username: String): PlatformLink<SoundCloudData> {
     validate_id(&username);
     platform_link::new(SoundCloudData { username })
 }
 
-/// Builds an Apple Music artist link. Aborts if empty.
+/// Builds an Apple Music artist link. Aborts if empty or too long.
 public fun apple_music(artist_id: String): PlatformLink<AppleMusicData> {
     validate_id(&artist_id);
     platform_link::new(AppleMusicData { artist_id })
 }
 
-/// Builds a Deezer artist link. Aborts if empty.
+/// Builds a Deezer artist link. Aborts if empty or too long.
 public fun deezer(artist_id: String): PlatformLink<DeezerData> {
     validate_id(&artist_id);
     platform_link::new(DeezerData { artist_id })
 }
 
-/// Builds a Tidal artist link. Aborts if empty.
+/// Builds a Tidal artist link. Aborts if empty or too long.
 public fun tidal(artist_id: String): PlatformLink<TidalData> {
     validate_id(&artist_id);
     platform_link::new(TidalData { artist_id })
 }
 
-/// Builds an Amazon Music artist link. Aborts if empty.
+/// Builds an Amazon Music artist link. Aborts if empty or too long.
 public fun amazon_music(artist_id: String): PlatformLink<AmazonMusicData> {
     validate_id(&artist_id);
     platform_link::new(AmazonMusicData { artist_id })
 }
 
-/// Builds an Audiomack link from a username. Aborts if empty.
+/// Builds an Audiomack link from a username. Aborts if empty or too long.
 public fun audiomack(username: String): PlatformLink<AudiomackData> {
     validate_id(&username);
     platform_link::new(AudiomackData { username })
 }
 
-// === Accessors ===
+// === View Functions ===
 
-public fun spotify_artist_id(self: &SpotifyData): String { self.artist_id }
-public fun bandcamp_subdomain(self: &BandcampData): String { self.subdomain }
-public fun soundcloud_username(self: &SoundCloudData): String { self.username }
-public fun apple_music_artist_id(self: &AppleMusicData): String { self.artist_id }
-public fun deezer_artist_id(self: &DeezerData): String { self.artist_id }
-public fun tidal_artist_id(self: &TidalData): String { self.artist_id }
-public fun amazon_music_artist_id(self: &AmazonMusicData): String { self.artist_id }
-public fun audiomack_username(self: &AudiomackData): String { self.username }
+/// The `artist_id` of a `SpotifyData`.
+public fun spotify_artist_id(self: &SpotifyData): String {
+    self.artist_id
+}
+
+/// The `subdomain` of a `BandcampData`.
+public fun bandcamp_subdomain(self: &BandcampData): String {
+    self.subdomain
+}
+
+/// The `username` of a `SoundCloudData`.
+public fun soundcloud_username(self: &SoundCloudData): String {
+    self.username
+}
+
+/// The `artist_id` of a `AppleMusicData`.
+public fun apple_music_artist_id(self: &AppleMusicData): String {
+    self.artist_id
+}
+
+/// The `artist_id` of a `DeezerData`.
+public fun deezer_artist_id(self: &DeezerData): String {
+    self.artist_id
+}
+
+/// The `artist_id` of a `TidalData`.
+public fun tidal_artist_id(self: &TidalData): String {
+    self.artist_id
+}
+
+/// The `artist_id` of a `AmazonMusicData`.
+public fun amazon_music_artist_id(self: &AmazonMusicData): String {
+    self.artist_id
+}
+
+/// The `username` of a `AudiomackData`.
+public fun audiomack_username(self: &AudiomackData): String {
+    self.username
+}
+
+// === Private Functions ===
 
 fun validate_id(id: &String) {
     assert!(!id.is_empty(), EEmptyId);
