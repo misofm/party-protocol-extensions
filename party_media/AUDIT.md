@@ -1,50 +1,25 @@
-# Release Audit — `party_media`
+# Security Audit — `party_media`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_media`, module `party_media::party_media`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-11 with `sui 1.79.0-46f18562f1f5`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Stores one nonzero Walrus quilt blob ID (`u256`) per party under `MediaKey`. See [README](README.md).
 
-## Verdict
+## Trust model
+- Writes call `party.uid_mut(cap)`, which asserts `cap.party_id == object::id(party)` (`miso_party::party`, `EUnauthorized` = 0) before any mutation or event. Views are permissionless.
+- `PartyAdminCap` (`key + store`) is unique per party and transferable. Whoever holds it, or borrows it from a wrapper, controls this slice. Group membership (`is_member`) grants nothing here.
+- `Media` (`store + drop`, no `copy`) and `MediaKey` can be created only by this module.
 
-Release-ready. No security or correctness findings remain.
+## Findings
+None at Low or above.
 
-## Implementation reviewed
+**MED-1 — Info — Accepted.** `set_media` rejects a zero quilt (`party_media.move:38`) before authorization, so a zero quilt with a wrong cap aborts `EZeroQuilt`. The README documents this. No other format check: any nonzero `u256` is accepted, and it is not checked to be an existing Walrus blob.
 
-`party_media` is a state-attaching extension. It stores one nonzero Walrus
-quilt ID (`u256`) as a Party dynamic field. Set/replace and clear require the
-matching `PartyAdminCap`; reads are permissionless. Set events are emitted for
-inserts and changed replacements and carry the party ID and new quilt id
-(64-byte payload); clear events carry the party ID (32 bytes). Equal
-replacements are silent. Patch roles are an off-chain
-convention, and no media bytes or funds are stored.
-
-## Exact manifest pins
-
-| Dependency | Repository | Revision |
-|---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `8e59a815dc1129166b66a76d568edb8822859255` |
-
-The manifest has no local-path or floating dependencies.
+## Checked, no finding
+- `set_media` (`:37-49`) inserts or replaces in place and is silent on an equal value (`:43`). `clear_media` (`:51-58`) is silent when absent.
+- Events: `MediaSetEvent` is 64 bytes and `MediaClearedEvent` 32 bytes (`tests/party_media_tests.move:34,64`).
+- Wrong cap aborts on set (absent, present or equal value) and on clear (absent or present).
+- `quilt` (`:66-69`) returns `Option`, so the view never aborts.
 
 ## Verification
-
-- Package tests: **11/11**, including **7** expected-failure paths covering zero
-  validation precedence, equal-write silence, wrong-cap set on
-  absent/present/equal state, and wrong-cap clear on absent/present state.
-- Strict Testnet and Mainnet lint builds passed with warnings as errors.
-- Production instruction coverage: **100.00%** on both Testnet and Mainnet.
-- End-to-end scenario covers Party share, cap transfer, later cap-gated media
-  write, and permissionless read from the shared Party, with views confirmed
-  event-silent.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-It is prior-generation metadata wherever pending inputs differ. Fresh immutable
-publication uses the admin CLI with `--allow-republish`; only after confirmed
-success may it replace the target network block.
+- `sui move test --coverage` (sui 1.82.1): 11/11 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.

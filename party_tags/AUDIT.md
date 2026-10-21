@@ -1,52 +1,26 @@
-# Release Audit — `party_tags`
+# Security Audit — `party_tags`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_tags`, module `party_tags::party_tags`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-11 with `sui 1.79.0-46f18562f1f5`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Stores up to 30 free-form tags (1–50 bytes each) per party in a `typed_set` under `TagsKey`. See [README](README.md).
 
-## Verdict
+## Trust model
+- Writes call `party.uid_mut(cap)`, which asserts `cap.party_id == object::id(party)` (`miso_party::party`, `EUnauthorized` = 0) before any mutation or event. Views are permissionless.
+- `PartyAdminCap` (`key + store`) is unique per party and transferable. Whoever holds it, or borrows it from a wrapper, controls this slice. Group membership (`is_member`) grants nothing here.
+- `TagsKey` has no public constructor.
 
-Release-ready. No security or correctness findings remain.
+## Findings
+None at Low or above.
 
-## Implementation reviewed
+**TAG-1 — Info — Accepted.** `add_tag` checks emptiness and length (`party_tags.move:46-47`) before authorization (`:49`). Dedupe is an exact byte match, with no case folding or trimming. The README documents both.
 
-`party_tags` is a state-attaching extension. It stores up to 30 exact-match
-free-form strings through `typed_set`, with each tag constrained to 1–50 bytes.
-All mutations require the matching `PartyAdminCap`; final removal reclaims the
-field, clear is idempotent, and views are permissionless. Add/remove events
-carry the party ID and the tag; populated clear events carry the party ID.
-Normalization and rendering safety
-remain client concerns.
-
-## Exact manifest pins
-
-| Dependency | Repository | Revision |
-|---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `8e59a815dc1129166b66a76d568edb8822859255` |
-| `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
-
-The manifest has no local-path or floating dependencies.
+## Checked, no finding
+- `add_tag` (`:45-51`): after the cap check, `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 30.
+- `remove_tag` (`:53-57`) aborts `EItemNotPresent` (1) and reclaims the field after the last removal.
+- `clear_tags` (`:59-66`) emits only when present.
+- Events carry the tag; the maximum is 83 bytes (`tests/party_tags_tests.move:220`).
+- Wrong cap aborts on add, remove and clear.
 
 ## Verification
-
-- Package tests: **23/23**, preserving the original 9 and adding event
-  field, BCS-size, silence, identity, ordering, and
-  authorization-order coverage.
-- Production instruction coverage: **100.00%**.
-- End-to-end scenario covers Party share, cap transfer, later tag write, and
-  permissionless read from the shared Party.
-- Strict Testnet and Mainnet builds passed with lint warnings as errors; package
-  tests passed 23/23 on each network; production instruction coverage was
-  100.00%.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-It is prior-generation metadata wherever pending inputs differ. Fresh immutable
-publication uses the admin CLI with `--allow-republish`; only after confirmed
-success may it replace the target network block.
+- `sui move test --coverage` (sui 1.82.1): 23/23 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.

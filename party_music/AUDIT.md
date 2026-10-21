@@ -1,49 +1,25 @@
-# Release Audit — `party_music`
+# Security Audit — `party_music`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_music`, module `party_music::party_music`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-02 with `sui 1.78.1-722ac4fcf484`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Pure payload package: validated `Data` types wrapped as `PlatformLink<Data>` for `party_platform_link`. Eight music-platform artist identifiers. See [README](README.md).
 
-## Verdict
+## Trust model
+- No `Party`, cap, storage or events. Constructors are permissionless and pure.
+- Every `Data` struct has private fields, so the validating constructor is the only way to build one. Copies of an existing value (`copy`) are always valid.
+- Authorization for attaching a link lives in `party_platform_link`.
 
-Release-ready. No security or correctness findings remain.
+## Findings
 
-## Implementation reviewed
+**MUS-1 — Medium — Open.** `platform_link` is a local-path dependency (`Move.toml:8`). Builds link it to the recorded publication, whose set event carries no payload (`lib/platform_link/AUDIT.md` PL-1). The payload types published here would then be `PlatformLink` values of that old package, and links of these types would emit payload-free events. Fix: republish `platform_link` first and build this package against the new address.
 
-`party_music` is a pure payload package, not a state-attaching extension. It
-defines eight artist-platform payload types and validated constructors for
-Spotify, Bandcamp, SoundCloud, Apple Music, Deezer, Tidal, Amazon Music, and
-Audiomack. A shared private validator enforces nonempty identifiers no longer
-than 256 bytes. The package has no Party, cap, storage, event, or automation
-logic; `party_platform_link` attaches returned values to Party state.
+**MUS-2 — Info — Accepted.** Validation is only non-empty plus a byte-length backstop (`party_music.move:116-119`). There is no character set or format check and no proof of account ownership. The README says the same; clients rebuild URLs from the identifiers and sanitize them.
 
-## Manifest dependencies
-
-| Dependency | Kind | Location |
-|---|---|---|
-| `platform_link` | local-path | `../lib/platform_link` |
-
-The manifest's only dependency is the local-path `platform_link` sibling
-above (`platform_link = { local = "../lib/platform_link" }`); it carries no
-Git pin and no floating dependency.
+## Checked, no finding
+- Every constructor calls the validator before `platform_link::new`. Limits come from `platform_link::max_identifier_length()` (256).
+- Each platform is a distinct `Data` type, so its `PlatformLinkKey<Data>` is distinct from every other platform's, here and in sibling packages.
+- Error codes are plain `u64` constants; all are reachable and tested.
 
 ## Verification
-
-- Package tests: **5/5**, including **3** expected-failure paths for empty
-  Spotify, empty Bandcamp, and the shared overlength validator.
-- All eight constructors and all eight accessors execute on success.
-- Production instruction coverage: **100.00%**.
-- Shared-Party workflow: not applicable; this package is pure payload code.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-Its bytecode predates the pending validator refactor even though public behavior
-and ABI are preserved. Fresh immutable publication uses the admin CLI with
-`--allow-republish`; only after confirmed success may it replace the target
-network block.
+- `sui move test --coverage` (sui 1.82.1): 5/5 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.

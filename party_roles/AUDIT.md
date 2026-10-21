@@ -1,53 +1,26 @@
-# Release Audit — `party_roles`
+# Security Audit — `party_roles`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_roles`, module `party_roles::party_roles`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-11 with `sui 1.79.0`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Stores up to 12 `ArtistRole` values (8 canonical variants plus `Custom(String)`) per party in a `typed_set` under `RolesKey`. See [README](README.md).
 
-## Verdict
+## Trust model
+- Writes call `party.uid_mut(cap)`, which asserts `cap.party_id == object::id(party)` (`miso_party::party`, `EUnauthorized` = 0) before any mutation or event. Views are permissionless.
+- `PartyAdminCap` (`key + store`) is unique per party and transferable. Whoever holds it, or borrows it from a wrapper, controls this slice. Group membership (`is_member`) grants nothing here.
+- `ArtistRole::Custom` can be built only through `custom` (`party_roles.move:79-83`), which enforces 1–60 bytes. `RolesKey` has no public constructor.
 
-Release-ready. No security or correctness findings remain.
+## Findings
+None at Low or above.
 
-## Implementation reviewed
+**ROL-1 — Info — Accepted.** Equality covers the whole enum value, so `Custom("Artist")` and `Artist` can be held together, and `Custom` names are case-sensitive. The README documents this. Clients render `role_name` (`:120-132`) as untrusted input.
 
-`party_roles` is a state-attaching extension. It stores up to 12
-`ArtistRole` values through `typed_set`: eight closed canonical variants plus a
-validated `Custom` name of 1–60 bytes. All mutations require the matching
-`PartyAdminCap`; final removal reclaims the field, clear is idempotent, and
-views are permissionless. Add/remove events carry the party ID and the
-`ArtistRole` value; clear carries the party ID. Exact enum equality deliberately distinguishes a canonical role
-from a same-spelled custom role.
-
-## Exact manifest pins
-
-| Dependency | Repository | Revision |
-|---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `8e59a815dc1129166b66a76d568edb8822859255` |
-| `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
-
-The manifest has no local-path or floating dependencies.
+## Checked, no finding
+- `add_role` (`:85-89`): the cap is checked first, then `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 12.
+- `remove_role` (`:91-95`) aborts `EItemNotPresent` (1) and drops the field after the last removal.
+- `clear_roles` (`:97-104`) emits only when present.
+- Events carry the full `ArtistRole` as an enum value; the maximum is 94 bytes (`tests/party_roles_tests.move:268,275`).
+- Wrong cap aborts on add, remove and clear.
 
 ## Verification
-
-- Package tests: **22/22**, including **14** expected-failure paths covering
-  both custom-name validators, duplicate/full precedence, missing item,
-  capacity, and wrong-cap remove/clear authorization.
-- Production instruction coverage: **100.00%**.
-- End-to-end scenario covers Party share, cap transfer, later role write, and
-  permissionless read from the shared Party.
-- Strict Testnet build/test: **22/22** package tests and **100.00%** production
-  instruction coverage.
-- Strict Mainnet build/test: **22/22** package tests and **100.00%** production
-  instruction coverage.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-It is prior-generation metadata wherever pending inputs differ. Fresh immutable
-publication uses the admin CLI with `--allow-republish`; only after confirmed
-success may it replace the target network block.
+- `sui move test --coverage` (sui 1.82.1): 22/22 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.

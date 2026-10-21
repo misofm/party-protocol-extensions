@@ -1,59 +1,37 @@
-# Release Audit — `party_platform_link`
+# Security Audit — `party_platform_link`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_platform_link`, module `party_platform_link::party_platform_link`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-11 with `sui 1.79.0-46f18562f1f5`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Party wiring for `platform_link`: cap-gated `set_link<Data>` / `clear_link<Data>` and permissionless `has_link` / `link` views. See [README](README.md).
 
-## Verdict
+## Trust model
+- Writes call `party.uid_mut(cap)`, which asserts `cap.party_id == object::id(party)` (`miso_party::party`, `EUnauthorized` = 0) before any mutation or event.
+- `PartyAdminCap` (`key + store`) is unique per party and transferable. Whoever holds it, or borrows it from a wrapper, controls every link. Group membership (`is_member`) grants nothing here.
+- The cap holder can also call `platform_link::set`/`remove`/`clear` directly on `party.uid_mut(cap)`. That is the same authority, and the same events are emitted.
 
-Release-ready. No security or correctness findings remain.
+## Findings
 
-## Implementation reviewed
+**PPL-1 — Medium — Open.** This package links to `platform_link` through a local path (`Move.toml:9`). That resolves to the recorded `platform_link` publication, whose set event carries no payload (see `lib/platform_link/AUDIT.md` PL-1). Publishing this package before `platform_link` is republished yields link events without the link data. Fix: republish `platform_link` first and verify the dependency address in the build output.
 
-`party_platform_link` is the state-attaching bridge for pure platform payloads.
-It generically sets/replaces or clears one `PlatformLink<Data>` dynamic field on
-a Party, gates writes with the matching `PartyAdminCap`, and provides
-permissionless optional reads. The primitive owns the
-`PlatformLinkSetEvent<Data>` (party ID + payload) and
-`PlatformLinkRemovedEvent<Data>` (party ID) emissions for insertions, changed
-replacements, and present clears; equal replacements are silent. The wrapper
-declares no events. Clear authenticates before its
-absent-state no-op. The package adds no payload validation, funds, Vault
-borrowing, Action logic, or entry automation.
+**PPL-2 — Low — Open.** `set_link` (`party_platform_link.move:13-19`) accepts any `Data: copy + drop + store`. `platform_link::new` is public and unvalidated, so a cap holder can attach links of any type (e.g. `String`, `u64`, a custom struct holding 100,000 bytes, all accepted in probes). There is no limit on the number of distinct `Data` fields per party. Harm is limited to the holder's own party, but the README says that payload constructors validate "before a link can exist". That is true only for the `party_social`, `party_music` and `party_pro_link` types. Fix: correct the README and require indexers and clients to whitelist `Data` types by package address.
 
-## Exact manifest pins
+**PPL-3 — Info — Accepted.** No ownership proof of handles: a party can copy another party's `PlatformLink<XData>` from `link<XData>` (`:34`) or construct the same handle. Verification is off-chain.
 
-| Dependency | Kind | Location | Mode |
-|---|---|---|---|
-| `miso_party` | Git pin | `https://github.com/misofm/party-protocol.git` @ `8e59a815dc1129166b66a76d568edb8822859255` | production |
-| `platform_link` | local-path | `../lib/platform_link` | production |
-| `party_social` | local-path | `../party_social` | test-only |
+**PPL-4 — Info — Accepted.** `clear_link` (`:21-26`) checks `exists_` at `:23`, but `platform_link::clear` already does nothing when absent. The check is redundant; behavior is identical.
 
-`miso_party` is the manifest's only Git pin. `platform_link` and `party_social`
-are local-path dependencies, not floating; `party_social` is excluded from
-the production graph by `modes = ["test"]`. `Move.lock` retains both
-environment pins, and `Published.toml` is retained unchanged.
+**PPL-5 — Info — Accepted.** Writes work on a `Party` that has not been shared yet (between `party::new` and `party::share` in one PTB). Link events can then precede `PartyCreatedEvent` in the same transaction (probe-verified). This applies to every state-attaching package.
+
+## Checked, no finding
+- Wrong cap aborts `EUnauthorized` on set (absent, present or equal value) and on clear (absent or present), before any event. Covered by `tests/party_platform_link_auth_tests.move`.
+- `ENoLink` is unreachable: only `set`, `clear`, `exists_` and `get` are called.
+- Events: one set event per insert or change, none for an equal value; one removed event per present clear, none when absent. `parent_id` is the party ID.
+- Distinct `Data` types and distinct parties produce independent fields and event streams.
+- `party_social` is a test-only dependency (`modes = ["test"]`, `Move.toml:13`) and is absent from the production graph.
+
+## Operational requirements
+- Republish `platform_link` before this package (PPL-1).
+- Indexers: filter `PlatformLinkSetEvent<Data>` and `PlatformLinkRemovedEvent<Data>` by whitelisted `Data`, and by `parent_id` against known `Party` IDs. Do not assume that `PartyCreatedEvent` comes first.
 
 ## Verification
-
-- Package tests: **9/9** on both Testnet and Mainnet, including five
-  expected-failure paths for wrong-cap absent/present/equal set and clear.
-- Strict Testnet and Mainnet lint builds passed with warnings as errors.
-- Production instruction coverage: **100.00%** on both Testnet and Mainnet
-  (`set_link`, `clear_link`, `has_link`, and `link`).
-- Event tests cover exact primitive parent ID and payload fields, one-event
-  deltas for insert/different replacement/present clear, silence for equal
-  replacement, absent/repeated clear and views, distinct X/Instagram streams and parties,
-  and the shared-party cap-holder/reader workflow.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-Its dependency inputs predate the pending exact-pin reconciliation. Fresh
-immutable publication uses the admin CLI with `--allow-republish`; only after
-confirmed success may it replace the target network block.
+- `sui move test --coverage` (sui 1.82.1): 9/9 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`. A testnet bytecode dump of a sibling payload package shows `platform_link` linked at `0xacec…4d8d`.

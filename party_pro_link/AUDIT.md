@@ -1,49 +1,27 @@
-# Release Audit — `party_pro_link`
+# Security Audit — `party_pro_link`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_pro_link`, module `party_pro_link::party_pro_link`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-02 with `sui 1.78.1-722ac4fcf484`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Pure payload package: validated `Data` types wrapped as `PlatformLink<Data>` for `party_platform_link`. Six URL payloads and three handle payloads. See [README](README.md).
 
-## Verdict
+## Trust model
+- No `Party`, cap, storage or events. Constructors are permissionless and pure.
+- Every `Data` struct has private fields, so the validating constructor is the only way to build one. Copies of an existing value (`copy`) are always valid.
+- Authorization for attaching a link lives in `party_platform_link`.
 
-Release-ready. No security or correctness findings remain.
+## Findings
 
-## Implementation reviewed
+**PRL-1 — Medium — Open.** `platform_link` is a local-path dependency (`Move.toml:8`). Builds link it to the recorded publication, whose set event carries no payload (`lib/platform_link/AUDIT.md` PL-1). The payload types published here would then be `PlatformLink` values of that old package, and links of these types would emit payload-free events. Fix: republish `platform_link` first and build this package against the new address.
 
-`party_pro_link` is a pure payload package, not a state-attaching extension. It
-defines six URL payloads and three handle/subdomain payloads. Shared private
-validators enforce nonempty values, URL length at most 2000 bytes, and handle
-length at most 256 bytes. The package has no Party, cap, storage, event, or
-automation logic; `party_platform_link` attaches its returned values.
+**PRL-2 — Info — Accepted.** Validation is only non-empty plus a byte-length backstop (`party_pro_link.move:129-137`). There is no character set or format check and no proof of account ownership. The README says the same. URL payloads are stored verbatim, so clients must check the scheme and sanitize before linking.
 
-## Manifest dependencies
+**PRL-3 — Info — Open.** The README's Errors section says that reading or removing a link that was never stored aborts `ENoLink`, "surfaced through `party_platform_link`". That is wrong: `party_platform_link` never calls `remove` or `borrow`, `link` returns `Option`, and `clear_link` is silent when nothing is stored. Fix: delete the sentence.
 
-| Dependency | Kind | Location |
-|---|---|---|
-| `platform_link` | local-path | `../lib/platform_link` |
-
-The manifest's only dependency is the local-path `platform_link` sibling
-above (`platform_link = { local = "../lib/platform_link" }`); it carries no
-Git pin and no floating dependency.
+## Checked, no finding
+- Every constructor calls the validator before `platform_link::new`. Limits come from `platform_link::max_identifier_length()` (256) and `max_url_length()` (2000).
+- Each platform is a distinct `Data` type, so its `PlatformLinkKey<Data>` is distinct from every other platform's, here and in sibling packages.
+- Error codes are plain `u64` constants; all are reachable and tested.
 
 ## Verification
-
-- Package tests: **6/6**, including **4** expected-failure paths covering
-  empty URL, empty handle, overlength URL, and overlength handle.
-- All nine constructors and their nine accessors execute successfully, including
-  `management_page` and `publisher_page`.
-- Production instruction coverage: **100.00%**.
-- Shared-Party workflow: not applicable; this package is pure payload code.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-Its bytecode predates the pending validator refactor even though public behavior
-and ABI are preserved. Fresh immutable publication uses the admin CLI with
-`--allow-republish`; only after confirmed success may it replace the target
-network block.
+- `sui move test --coverage` (sui 1.82.1): 6/6 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.

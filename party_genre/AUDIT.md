@@ -1,47 +1,27 @@
-# Release Audit — `party_genre`
+# Security Audit — `party_genre`
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_genre`, module `party_genre::party_genre`.
 
-**Repository:** `https://github.com/misofm/party-protocol-extensions`
-**Audit target:** `main`
-**Reviewed:** 2026-09-02 with `sui 1.78.1-722ac4fcf484`
-**Verification re-run:** 2026-10-21 with `sui 1.82.1`, after the house-style pass
+## What it does
+Stores up to 20 `genre::Genre` object IDs per party in a `typed_set` under `GenresKey`. Adding requires a `&Genre`; removal is by ID. See [README](README.md).
 
-## Verdict
+## Trust model
+- Writes call `party.uid_mut(cap)`, which asserts `cap.party_id == object::id(party)` (`miso_party::party`, `EUnauthorized` = 0) before any mutation or event. Views are permissionless.
+- `PartyAdminCap` (`key + store`) is unique per party and transferable. Whoever holds it, or borrows it from a wrapper, controls this slice. Group membership (`is_member`) grants nothing here.
+- `GenresKey` has no public constructor, so `typed_set` calls on this key are possible only through this module.
+- `Genre` objects are frozen and live at a derived address under the single `GenreRegistry` (`genre::genre::new`), so names and IDs are immutable and unique.
 
-Release-ready. No security or correctness findings remain.
+## Findings
 
-## Implementation reviewed
+**GEN-1 — Info — Accepted.** The vocabulary is open: `genre::genre::new` takes `&mut GenreRegistry` and no cap. Any sender can mint a genre with any `[A-Z_]` name of 1–64 bytes and tag a party with it (probe-verified). "Proven at write time" means only that the `Genre` exists in the registry, not that it was curated. Curation, if wanted, belongs off-chain or in a later catalog object.
 
-`party_genre` is a state-attaching extension. It stores up to 20 canonical
-`Genre` object IDs through `typed_set`. Adding requires `&Genre`, proving the
-vocabulary object exists; removal is by ID. All mutations require the matching
-`PartyAdminCap`, final removal reclaims the field, and clear is idempotent.
-
-## Exact manifest pins
-
-| Dependency | Repository | Revision |
-|---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `8e59a815dc1129166b66a76d568edb8822859255` |
-| `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
-| `genre` | `https://github.com/misofm/genre.git` | `4c47bd1cd78c4bf1dad0e72e6598060fe8a553cd` |
-
-The manifest has no local-path or floating dependencies.
+## Checked, no finding
+- `add_genre` (`party_genre.move:41-46`): `typed_set` aborts `EDuplicateItem` (0) before `EMaxItemsExceeded` (2). The cap is checked first because `uid_mut` is evaluated before the `typed_set` call.
+- `remove_genre` (`:48-52`) aborts `EItemNotPresent` (1) when the ID is missing or no set exists. Removing the last item drops the field.
+- `clear_genres` (`:54-61`) emits only when a set exists.
+- Events: an add carries `genre_id` and the immutable `genre_name` (at most 129 bytes); a remove carries `genre_id`; a clear carries `party_id`. One event per action.
+- Wrong cap on add, remove and clear (with or without a set present) aborts `EUnauthorized`.
+- Dependencies are exact pins: `miso_party` `8e59a81…`, `typed_set` `b37474c…`, `genre` `4c47bd1…`.
 
 ## Verification
-
-- Package tests: **15/15**, including **13** expected-failure paths for
-  duplicate, missing item, capacity, duplicate-before-capacity, and wrong-cap
-  add/remove/clear authorization.
-- Production instruction coverage: **100.00%**.
-- End-to-end scenario covers the shared genre registry, immutable Genre,
-  shared Party, transferred admin cap, cap-gated write, and later public read.
-- Repository aggregate (re-run 2026-10-21): **146/146** tests across the 11
-  packages with zero warnings, strict Mainnet and Testnet builds; all 11
-  production modules at **100.00%**.
-
-## Published metadata
-
-The retained `Published.toml` is the sole record of the prior immutable Testnet package id;
-it is not repeated here.
-It is prior-generation metadata wherever pending inputs differ. Fresh immutable
-publication uses the admin CLI with `--allow-republish`; only after confirmed
-success may it replace the target network block.
+- `sui move test --coverage` (sui 1.82.1): 15/15 pass; module coverage 100.00%.
+- Strict lint builds pass for `-e mainnet` and `-e testnet`.
