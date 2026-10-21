@@ -4,7 +4,7 @@
 #[test_only]
 module party_media::party_media_tests;
 
-use partyos::party;
+use miso_party::party;
 use party_media::party_media as media;
 use std::unit_test::{assert_eq, destroy};
 use sui::event;
@@ -17,9 +17,7 @@ const MAX_QUILT: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -151,7 +149,7 @@ fun shared_party_cap_holder_and_reader() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
     let admin_cap_id = object::id(&cap).to_address();
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);
@@ -196,7 +194,7 @@ fun zero_quilt_precedes_wrong_cap() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_media_with_wrong_cap_aborts_when_absent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -205,7 +203,7 @@ fun set_media_with_wrong_cap_aborts_when_absent() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_media_with_wrong_cap_aborts_when_existing() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -215,7 +213,7 @@ fun set_media_with_wrong_cap_aborts_when_existing() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_media_equal_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -227,7 +225,7 @@ fun set_media_equal_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_media_with_wrong_cap_aborts_when_absent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -236,7 +234,7 @@ fun clear_media_with_wrong_cap_aborts_when_absent() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_media_with_wrong_cap_aborts_when_existing() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);

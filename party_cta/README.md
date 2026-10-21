@@ -32,7 +32,7 @@ Limits, enforced in `new_cta` and `set_ctas`:
 ## API
 
 All writes require `&PartyAdminCap` for the exact party; a wrong cap aborts
-with `EUnauthorized` at `partyos::party`.
+with `EUnauthorized` at `miso_party::party`.
 
 ### Constructor / accessors
 
@@ -78,12 +78,12 @@ replacements still write the list but are silent, and an absent clear is silent.
 | 4 | `ETooManyCtas` | List exceeds 20 CTAs |
 
 A wrong `PartyAdminCap` aborts with `EUnauthorized` (0) at
-`partyos::party`, before any mutation or event.
+`miso_party::party`, before any mutation or event.
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at exact revision
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — the `Party` /
+- [`miso_party`](https://github.com/misofm/party-protocol) at exact revision
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — the `Party` /
   `PartyAdminCap` authorization core.
 - Nothing else beyond the Sui framework (`sui::dynamic_field`, `sui::event`,
   `std::string`) — no primitive or protocol dependencies, by design. The

@@ -1,6 +1,6 @@
 # Release Audit — `platform_link`
 
-**Repository:** `https://github.com/misofm/partyos-extensions`
+**Repository:** `https://github.com/misofm/party-protocol-extensions`
 **Audit target:** pending working-tree source on `codex/rich-events`
 **Date:** 2026-09-11
 **Toolchain:** `sui 1.79.0`
@@ -26,7 +26,7 @@ Identifier and URL backstops are exactly 256 and 2000 bytes.
 
 The manifest has no explicit dependency. `Move.lock` resolves the Sui
 framework for both Testnet and Mainnet at exact revision
-`2a0becb2fcc6989e492981104af67f62f2c9511a`. There are no local-path, branch,
+`719fb2960ccfbf9f4d33041f8ea5146d30671696`. There are no local-path, branch,
 or floating Git dependencies.
 
 ## Verification

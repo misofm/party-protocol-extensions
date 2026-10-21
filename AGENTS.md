@@ -7,7 +7,7 @@ and [README.md](README.md) for the architecture and package overview.
 ## Repository shape
 
 - `lib/*` — protocol-agnostic primitives owned by this repository (currently
-  `platform_link`). They depend only on the Sui framework: no `partyos`, no
+  `platform_link`). They depend only on the Sui framework: no `miso_party`, no
   Miso. The bounded-set primitive is the immutable external package
   [`unconfirmedlabs/typed_set`](https://github.com/unconfirmedlabs/typed_set).
   If a mechanism knows what a party is, it does not belong in `lib/`.
@@ -38,7 +38,7 @@ and [README.md](README.md) for the architecture and package overview.
    site, no unused public surface.
 4. **Keep behavior out.** Extensions attach data to `Party`. Composable
    functionality that consumes a raw `PartyAdminCap` belongs in
-   [`misofm/partyos-actions`](https://github.com/misofm/partyos-actions).
+   [`misofm/party-protocol-actions`](https://github.com/misofm/party-protocol-actions).
    Permissionless Vault automation belongs in an entry-only plugin that calls
    an Action. Do not put operational workflows in an extension.
 5. **Gate every state-attaching write with the cap.** Those writes take
@@ -62,7 +62,7 @@ and [README.md](README.md) for the architecture and package overview.
    `party_media`'s quilt id or a role or tag string), which ride in.
 9. **Tests:** happy path and each validation abort. Every state-attaching
    extension also needs a wrong-cap test
-   (`expected_failure(abort_code = EUnauthorized, location = partyos::party)`
+   (`expected_failure(abort_code = EUnauthorized, location = miso_party::party)`
    — mirror the constant locally). Set-mechanics aborts assert `typed_set`'s
    codes at `location = typed_set::typed_set`.
 10. **Document** (below): package README, root README row, ROADMAP row.

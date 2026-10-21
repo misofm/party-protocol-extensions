@@ -28,14 +28,14 @@ is silent.
 ## API
 
 All writes require `&PartyAdminCap` for the exact party; a wrong cap aborts
-with `EUnauthorized` at `partyos::party`.
+with `EUnauthorized` at `miso_party::party`.
 
 ### Writes (cap-gated)
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set_profile(party, cap, bio_short, bio_long, country, languages)` | Create or replace the whole profile card in one call; changed values emit compact context | validation errors below; wrong cap at `partyos::party` |
-| `clear_profile(party, cap)` | Remove the profile and emit its prior country/language codes; no-op when none is set (no event then) | wrong cap at `partyos::party` |
+| `set_profile(party, cap, bio_short, bio_long, country, languages)` | Create or replace the whole profile card in one call; changed values emit compact context | validation errors below; wrong cap at `miso_party::party` |
+| `clear_profile(party, cap)` | Remove the profile and emit its prior country/language codes; no-op when none is set (no event then) | wrong cap at `miso_party::party` |
 
 ### Views
 
@@ -67,13 +67,13 @@ with `EUnauthorized` at `partyos::party`.
 | 5 | `ENoProfile` | `profile()` with no profile set |
 | 6 | `EDuplicateLanguage` | A language tag appears more than once |
 
-Both writes also surface `EUnauthorized` (0) at `partyos::party` on a
+Both writes also surface `EUnauthorized` (0) at `miso_party::party` on a
 wrong cap.
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — the `Party` authorization
+- [`miso_party`](https://github.com/misofm/party-protocol) at
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — the `Party` authorization
   core.
 - [`country_code`](https://github.com/unconfirmedlabs/country_code) at
   `b4c92cb7f772879335344d7b6499b5fa4eafef56` — validated `CountryCode`.

@@ -1,6 +1,6 @@
 # Release Audit — `party_platform_link`
 
-**Repository:** `https://github.com/misofm/partyos-extensions`
+**Repository:** `https://github.com/misofm/party-protocol-extensions`
 **Audit target:** pending working-tree source on `codex/rich-events`
 **Date:** 2026-09-11
 **Toolchain:** `sui 1.79.0-46f18562f1f5`
@@ -27,11 +27,11 @@ borrowing, Action logic, or entry automation.
 
 | Dependency | Kind | Location | Mode |
 |---|---|---|---|
-| `partyos` | Git pin | `https://github.com/misofm/partyos.git` @ `c23df9018e15a76395c65bc8dfca4b365140aa12` | production |
+| `miso_party` | Git pin | `https://github.com/misofm/party-protocol.git` @ `defb05a6066cdf7e8949f9162f00589d38eef6ce` | production |
 | `platform_link` | local-path | `../lib/platform_link` | production |
 | `party_social` | local-path | `../party_social` | test-only |
 
-`partyos` is the manifest's only Git pin. `platform_link` and `party_social`
+`miso_party` is the manifest's only Git pin. `platform_link` and `party_social`
 are local-path dependencies, not floating; `party_social` is excluded from
 the production graph by `modes = ["test"]`. `Move.lock` retains both
 environment pins, and `Published.toml` is retained unchanged.

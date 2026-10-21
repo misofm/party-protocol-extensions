@@ -19,7 +19,7 @@
 /// `party::uid_mut`, and views are permissionless.
 module party_media::party_media;
 
-use partyos::party::{Party, PartyAdminCap};
+use miso_party::party::{Party, PartyAdminCap};
 use sui::dynamic_field as df;
 use sui::event::emit;
 

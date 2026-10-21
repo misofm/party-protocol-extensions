@@ -28,7 +28,7 @@ the `PartyAdminCap` through `party::uid_mut(cap)`; views are permissionless.
 
 All writes require the matching `PartyAdminCap`. `add_tag` validates empty and
 overlong tags before authorization; after those checks, a wrong cap aborts with
-`EUnauthorized` at `partyos::party`. Views are permissionless.
+`EUnauthorized` at `miso_party::party`. Views are permissionless.
 
 ### Writes (cap-gated)
 
@@ -73,8 +73,8 @@ Surfaced from `typed_set` (abort location `typed_set::typed_set`):
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — the authorization core.
+- [`miso_party`](https://github.com/misofm/party-protocol) at
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — the authorization core.
 - [`typed_set`](https://github.com/unconfirmedlabs/typed_set) at
   `b37474cbde166b7ddf8a3b615cd89f90182ace6f` — dynamic-field set storage,
   duplicate/not-present/capacity aborts, and field reclamation.

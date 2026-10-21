@@ -1,6 +1,6 @@
 # Release Audit — `party_genre`
 
-**Repository:** `https://github.com/misofm/partyos-extensions`
+**Repository:** `https://github.com/misofm/party-protocol-extensions`
 **Audit target:** pending working-tree source on `main` (matches the repository's current `HEAD`)
 **Date:** 2026-09-02
 **Toolchain:** `sui 1.78.1-722ac4fcf484`
@@ -20,9 +20,9 @@ vocabulary object exists; removal is by ID. All mutations require the matching
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `partyos` | `https://github.com/misofm/partyos.git` | `c23df9018e15a76395c65bc8dfca4b365140aa12` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `defb05a6066cdf7e8949f9162f00589d38eef6ce` |
 | `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
-| `genre` | `https://github.com/misofm/genre.git` | `09f6882b57b19498f36fa15840cd7ed61094dc41` |
+| `genre` | `https://github.com/misofm/genre.git` | `90baae2919f7272f6d4bbb245b643f7dba5dc0ba` |
 
 The manifest has no local-path or floating dependencies.
 

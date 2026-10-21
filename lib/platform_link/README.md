@@ -76,7 +76,7 @@ payload serialization, hashes, or duplicated type-name bytes are emitted.
 
 No explicit manifest dependency. The Sui framework is resolved automatically;
 `Move.lock` pins both Testnet and Mainnet framework sources to
-`2a0becb2fcc6989e492981104af67f62f2c9511a`. The manifest has no local-path
+`719fb2960ccfbf9f4d33041f8ea5146d30671696`. The manifest has no local-path
 or floating dependencies.
 
 ## Integrator notes

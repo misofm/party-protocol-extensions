@@ -4,7 +4,7 @@
 #[test_only]
 module party_platform_link::party_platform_link_auth_tests;
 
-use partyos::party;
+use miso_party::party;
 use party_platform_link::party_platform_link as links;
 use party_social::party_social as social;
 
@@ -13,14 +13,12 @@ const EUnauthorized: u64 = 0;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_link_with_wrong_cap_aborts_when_absent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -29,7 +27,7 @@ fun set_link_with_wrong_cap_aborts_when_absent() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_link_with_wrong_cap_aborts_when_existing() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -39,7 +37,7 @@ fun set_link_with_wrong_cap_aborts_when_existing() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_link_equal_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -51,7 +49,7 @@ fun set_link_equal_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_link_with_wrong_cap_aborts_when_absent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -60,7 +58,7 @@ fun clear_link_with_wrong_cap_aborts_when_absent() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_link_with_wrong_cap_aborts_when_existing() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);

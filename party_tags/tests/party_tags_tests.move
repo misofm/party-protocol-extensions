@@ -4,7 +4,7 @@
 #[test_only]
 module party_tags::party_tags_tests;
 
-use partyos::party;
+use miso_party::party;
 use party_tags::party_tags as tags;
 use sui::bcs;
 use sui::event;
@@ -17,9 +17,7 @@ const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -68,7 +66,7 @@ fun add_remove_and_query() {
 fun shared_party_tags_workflow() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);
@@ -132,7 +130,7 @@ fun rejects_over_max() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_tag_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -143,7 +141,7 @@ fun add_tag_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_tag_with_wrong_cap_on_full_set_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -290,7 +288,7 @@ fun transferred_cap_identity_is_emitted() {
     let (p, cap) = new_party(scenario.ctx());
     let party_id = object::id(&p).to_address();
     let admin_cap_id = object::id(&cap).to_address();
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);
@@ -309,7 +307,7 @@ fun transferred_cap_identity_is_emitted() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_present_tag_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -319,7 +317,7 @@ fun remove_with_wrong_cap_and_present_tag_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_tag_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -329,7 +327,7 @@ fun remove_with_wrong_cap_and_missing_tag_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -338,7 +336,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_present_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -348,7 +346,7 @@ fun clear_with_wrong_cap_and_present_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);

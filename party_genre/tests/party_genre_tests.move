@@ -6,7 +6,7 @@ module party_genre::party_genre_tests;
 
 use genre::genre as g;
 use genre::genre::{GenreRegistry, Genre};
-use partyos::party;
+use miso_party::party;
 // Aliased so the bare `party_genre` name stays free for `location = …`.
 use party_genre::party_genre as pg;
 use std::unit_test::{assert_eq, destroy};
@@ -61,9 +61,7 @@ fun fill_genres_from(
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -353,7 +351,7 @@ fun shared_party_genre_workflow() {
 
     scenario.next_tx(CREATOR);
     let (p, cap) = new_party(scenario.ctx());
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, CREATOR);
 
     scenario.next_tx(CREATOR);
@@ -414,7 +412,7 @@ fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun wrong_cap_duplicate_on_full_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -490,7 +488,7 @@ fun remove_from_missing_field_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_present_member_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -506,7 +504,7 @@ fun remove_with_wrong_cap_and_present_member_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_member_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -522,7 +520,7 @@ fun remove_with_wrong_cap_and_missing_member_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -533,7 +531,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -549,7 +547,7 @@ fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -560,7 +558,7 @@ fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_genre_with_wrong_cap_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
@@ -577,7 +575,7 @@ fun add_genre_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_genre_with_wrong_cap_on_full_set_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());

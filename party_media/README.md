@@ -25,14 +25,14 @@ are silent, and an absent clear is silent.
 
 `set_media` rejects a zero quilt before authorization. For a nonzero set, and
 for every `clear_media` call, the cap must match the exact party or the call
-aborts with `EUnauthorized` (0) at `partyos::party`.
+aborts with `EUnauthorized` (0) at `miso_party::party`.
 
 ### Writes (cap-gated)
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set_media(party, cap, quilt)` | Set or replace the party's media quilt; changed values emit one complete `MediaSetEvent`, equal replacements still write silently | `EZeroQuilt` (0) on a zero quilt id; wrong cap at `partyos::party` |
-| `clear_media(party, cap)` | Remove the party's media and emit its prior quilt — no-op (and silent) when unset | wrong cap at `partyos::party` |
+| `set_media(party, cap, quilt)` | Set or replace the party's media quilt; changed values emit one complete `MediaSetEvent`, equal replacements still write silently | `EZeroQuilt` (0) on a zero quilt id; wrong cap at `miso_party::party` |
+| `clear_media(party, cap)` | Remove the party's media and emit its prior quilt — no-op (and silent) when unset | wrong cap at `miso_party::party` |
 
 ### Views
 
@@ -53,12 +53,12 @@ aborts with `EUnauthorized` (0) at `partyos::party`.
 | Code | Constant | Condition |
 |---|---|---|
 | 0 | `EZeroQuilt` | `set_media` called with a zero quilt id — zero is never a real Walrus blob id and is indistinguishable from "unset" downstream |
-| 0 | `EUnauthorized` | `partyos::party`: a nonzero set or any clear uses a cap for a different party; authorization occurs before dynamic-field existence checks |
+| 0 | `EUnauthorized` | `miso_party::party`: a nonzero set or any clear uses a cap for a different party; authorization occurs before dynamic-field existence checks |
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at exact revision
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — the `Party` /
+- [`miso_party`](https://github.com/misofm/party-protocol) at exact revision
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — the `Party` /
   `PartyAdminCap` authorization core.
 - Otherwise only the Sui framework (`sui::dynamic_field`, `sui::event`). The
   manifest has no local-path or floating dependencies.

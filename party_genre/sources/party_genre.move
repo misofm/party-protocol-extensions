@@ -18,7 +18,7 @@
 module party_genre::party_genre;
 
 use genre::genre::Genre;
-use partyos::party::{Party, PartyAdminCap};
+use miso_party::party::{Party, PartyAdminCap};
 use sui::event::emit;
 use typed_set::typed_set as set;
 

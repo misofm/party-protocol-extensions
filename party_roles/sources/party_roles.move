@@ -16,7 +16,7 @@
 /// and before/after counts; a populated clear carries counts only.
 module party_roles::party_roles;
 
-use partyos::party::{Party, PartyAdminCap};
+use miso_party::party::{Party, PartyAdminCap};
 use std::string::String;
 use sui::event::emit;
 use typed_set::typed_set as set;

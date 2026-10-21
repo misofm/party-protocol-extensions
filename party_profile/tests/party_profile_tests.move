@@ -6,7 +6,7 @@ module party_profile::party_profile_tests;
 
 use country_code::country_code as cc;
 use language_code::language_code as lc;
-use partyos::party;
+use miso_party::party;
 use party_profile::party_profile as profile;
 use std::unit_test::{assert_eq, destroy};
 use sui::bcs;
@@ -26,9 +26,7 @@ fun long_string(len: u64): std::string::String {
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -233,7 +231,7 @@ fun clear_profile_removes_it() {
 fun shared_party_profile_workflow() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);
@@ -462,7 +460,7 @@ fun rejects_duplicate_languages() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_profile_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -473,7 +471,7 @@ fun set_profile_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_profile_replace_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -485,7 +483,7 @@ fun set_profile_replace_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun set_profile_equal_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -497,7 +495,7 @@ fun set_profile_equal_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_profile_with_wrong_cap_aborts_when_absent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -506,7 +504,7 @@ fun clear_profile_with_wrong_cap_aborts_when_absent() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_profile_with_wrong_cap_aborts_when_existing() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);

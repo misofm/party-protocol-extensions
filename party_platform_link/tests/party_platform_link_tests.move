@@ -4,7 +4,7 @@
 #[test_only]
 module party_platform_link::party_platform_link_tests;
 
-use partyos::party;
+use miso_party::party;
 use party_platform_link::party_platform_link as links;
 use party_social::party_social::{Self as social, XData, InstagramData};
 use platform_link::platform_link as primitive;
@@ -16,9 +16,7 @@ const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -80,7 +78,7 @@ fun shared_party_cap_holder_and_reader() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
     let parent_id = object::id(&p).to_address();
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);

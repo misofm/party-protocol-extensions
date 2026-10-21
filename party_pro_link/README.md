@@ -105,7 +105,7 @@ Reading or removing a link that was never stored aborts with `ENoLink` (0) at
   the shared length backstops (`max_identifier_length()` = 256,
   `max_url_length()` = 2000) so every payload package validates against the
   same numbers.
-- Notably no `partyos`: the package knows nothing about parties or caps —
+- Notably no `miso_party`: the package knows nothing about parties or caps —
   authorization is entirely `party_platform_link`'s concern.
 
 The manifest's only dependency is the local-path `platform_link` sibling

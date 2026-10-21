@@ -1,6 +1,6 @@
 # Release Audit — `party_media`
 
-**Repository:** `https://github.com/misofm/partyos-extensions`
+**Repository:** `https://github.com/misofm/party-protocol-extensions`
 **Audit target:** pending working-tree source on `codex/rich-events`
 **Date:** 2026-09-11
 **Toolchain:** `sui 1.79.0-46f18562f1f5`
@@ -24,7 +24,7 @@ convention, and no media bytes or funds are stored.
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `partyos` | `https://github.com/misofm/partyos.git` | `c23df9018e15a76395c65bc8dfca4b365140aa12` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `defb05a6066cdf7e8949f9162f00589d38eef6ce` |
 
 The manifest has no local-path or floating dependencies.
 

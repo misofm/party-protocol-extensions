@@ -96,7 +96,7 @@ when a link is set or cleared; indexers re-read the field.
   `platform_link::new` wrapping plus the shared
   `max_identifier_length()` backstop.
 
-Notably absent: `partyos`. This package never sees a `Party` or a
+Notably absent: `miso_party`. This package never sees a `Party` or a
 `PartyAdminCap`; authorization is entirely `party_platform_link`'s concern.
 The manifest's only dependency is the local-path `platform_link` sibling
 above.

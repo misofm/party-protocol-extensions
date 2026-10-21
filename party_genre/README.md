@@ -25,7 +25,7 @@ proof, the capacity, and the typed events.
 
 All writes require `&PartyAdminCap` for the exact party and go through
 `party::uid_mut(cap)`; a wrong cap aborts with `EUnauthorized` at
-`partyos::party`. Views are permissionless.
+`miso_party::party`. Views are permissionless.
 
 ### Writes (cap-gated)
 
@@ -61,17 +61,17 @@ surfaces from a dependency:
 | 0 | `EDuplicateItem` | `typed_set::typed_set` | `add_genre` with a genre already in the set |
 | 1 | `EItemNotPresent` | `typed_set::typed_set` | `remove_genre` with an id not in the set (or no set stored) |
 | 2 | `EMaxItemsExceeded` | `typed_set::typed_set` | `add_genre` when the set already holds `MAX_GENRES` (20) genres |
-| 0 | `EUnauthorized` | `partyos::party` | any write with a cap for a different party |
+| 0 | `EUnauthorized` | `miso_party::party` | any write with a cap for a different party |
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — `Party` authorization.
+- [`miso_party`](https://github.com/misofm/party-protocol) at
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — `Party` authorization.
 - [`typed_set`](https://github.com/unconfirmedlabs/typed_set) at
   `b37474cbde166b7ddf8a3b615cd89f90182ace6f` — bounded-set storage,
   duplicate/capacity checks, and field reclamation.
 - [`genre`](https://github.com/misofm/genre) at
-  `09f6882b57b19498f36fa15840cd7ed61094dc41` — the canonical shared genre
+  `90baae2919f7272f6d4bbb245b643f7dba5dc0ba` — the canonical shared genre
   vocabulary.
 
 All are exact Git pins; this manifest has no local-path dependencies.

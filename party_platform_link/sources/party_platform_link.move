@@ -17,7 +17,7 @@
 /// event.
 module party_platform_link::party_platform_link;
 
-use partyos::party::{Party, PartyAdminCap};
+use miso_party::party::{Party, PartyAdminCap};
 use platform_link::platform_link::{Self, PlatformLink};
 
 // === Events ===

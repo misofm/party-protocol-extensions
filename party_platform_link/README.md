@@ -37,7 +37,7 @@ shared backstops (`platform_link::max_identifier_length()` 256 bytes,
 ## API
 
 All writes require `&PartyAdminCap` for the exact party; a wrong cap aborts
-with `EUnauthorized` at `partyos::party`.
+with `EUnauthorized` at `miso_party::party`.
 
 ### Writes (cap-gated)
 
@@ -69,7 +69,7 @@ primitive emits only the parent ID and existence flags.
 
 | Code | Constant | Condition |
 |---|---|---|
-| 0 | `EUnauthorized` (at `partyos::party`) | The cap does not belong to this party — both writes gate through `party::uid_mut(cap)` before any mutation or event |
+| 0 | `EUnauthorized` (at `miso_party::party`) | The cap does not belong to this party — both writes gate through `party::uid_mut(cap)` before any mutation or event |
 
 No error constants are declared in this module, and none surface from
 `platform_link`: `set_link` / `clear_link` call only its non-aborting
@@ -79,8 +79,8 @@ payload packages, before `set_link` is ever called.
 
 ## Dependencies
 
-- [`partyos`](https://github.com/misofm/partyos) at exact revision
-  `a55f9a2ae9d782d453305961862789dce9deef5b` — `Party` authorization. This
+- [`miso_party`](https://github.com/misofm/party-protocol) at exact revision
+  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — `Party` authorization. This
   is the manifest's only Git pin.
 - [`platform_link`](../lib/platform_link) — a local-path sibling package
   (`platform_link = { local = "../lib/platform_link" }`) — all storage
@@ -90,7 +90,7 @@ payload packages, before `set_link` is ever called.
   test-only; concrete payloads for generic tests, absent from the
   production dependency graph.
 
-`partyos` is the manifest's only Git pin; `platform_link` and `party_social`
+`miso_party` is the manifest's only Git pin; `platform_link` and `party_social`
 are local-path dependencies.
 
 ## Integrator notes

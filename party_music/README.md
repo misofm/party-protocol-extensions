@@ -36,7 +36,7 @@ and at most 256 bytes:
 ## API
 
 No cap-gated writes live here — the package never sees a `Party` (it does
-not even depend on `partyos`). The gated writes are
+not even depend on `miso_party`). The gated writes are
 `party_platform_link::set_link(party, cap, link)` and
 `clear_link<Data>(party, cap)`; the constructors below only build the
 `PlatformLink<Data>` value those calls consume.
@@ -97,7 +97,7 @@ validation runs before `platform_link::new` is called.
   `platform_link::new` wraps each payload, and
   `platform_link::max_identifier_length()` supplies the shared length
   backstop.
-- No `partyos` dependency, by design: this package defines values, and
+- No `miso_party` dependency, by design: this package defines values, and
   cap-gating is entirely `party_platform_link`'s concern.
 
 The manifest's only dependency is the local-path `platform_link` sibling

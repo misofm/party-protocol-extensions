@@ -4,7 +4,7 @@
 #[test_only]
 module party_roles::party_roles_tests;
 
-use partyos::party;
+use miso_party::party;
 use party_roles::party_roles as roles;
 use std::unit_test::{assert_eq, destroy};
 use sui::bcs;
@@ -35,9 +35,7 @@ fun multibyte_bytes(): vector<u8> {
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     {
-        let clock = sui::clock::create_for_testing(ctx);
-        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), &clock, ctx);
-        clock.destroy_for_testing();
+        let (p, cap) = party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx);
         (p, cap)
     }
 }
@@ -83,7 +81,7 @@ fun add_remove_and_query() {
 fun shared_party_roles_workflow() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    party::share(p, &cap, scenario.ctx());
+    party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
     scenario.next_tx(OWNER);
@@ -148,7 +146,7 @@ fun rejects_over_max() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_role_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -159,7 +157,7 @@ fun add_role_with_wrong_cap_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun add_role_with_wrong_cap_on_full_set_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -402,7 +400,7 @@ fun remove_from_missing_field_aborts() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_present_role_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -412,7 +410,7 @@ fun remove_with_wrong_cap_and_present_role_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_role_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -422,7 +420,7 @@ fun remove_with_wrong_cap_and_missing_role_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
@@ -431,7 +429,7 @@ fun remove_with_wrong_cap_and_missing_field_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
@@ -441,7 +439,7 @@ fun clear_with_wrong_cap_and_populated_set_aborts_as_unauthorized() {
     abort
 }
 
-#[test, expected_failure(abort_code = EUnauthorized, location = partyos::party)]
+#[test, expected_failure(abort_code = EUnauthorized, location = miso_party::party)]
 fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);

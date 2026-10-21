@@ -1,6 +1,6 @@
 # Release Audit — `party_social`
 
-**Repository:** `https://github.com/misofm/partyos-extensions`
+**Repository:** `https://github.com/misofm/party-protocol-extensions`
 **Audit target:** pending working-tree source on `main` (matches the repository's current `HEAD`)
 **Date:** 2026-09-02
 **Toolchain:** `sui 1.78.1-722ac4fcf484`

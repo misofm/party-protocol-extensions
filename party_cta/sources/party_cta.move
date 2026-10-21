@@ -18,7 +18,7 @@
 /// do not emit a change event.
 module party_cta::party_cta;
 
-use partyos::party::{Party, PartyAdminCap};
+use miso_party::party::{Party, PartyAdminCap};
 use std::string::String;
 use sui::dynamic_field as df;
 use sui::event::emit;
