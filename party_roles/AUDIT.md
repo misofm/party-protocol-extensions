@@ -23,7 +23,7 @@ from a same-spelled custom role.
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `defb05a6066cdf7e8949f9162f00589d38eef6ce` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `7b25b1aa4f41ff16e82315b321736042d0debf57` |
 | `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
 
 The manifest has no local-path or floating dependencies.

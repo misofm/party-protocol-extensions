@@ -23,7 +23,7 @@ contains no funds or automation entrypoints.
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `defb05a6066cdf7e8949f9162f00589d38eef6ce` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `7b25b1aa4f41ff16e82315b321736042d0debf57` |
 
 The manifest has no local-path or floating dependencies.
 

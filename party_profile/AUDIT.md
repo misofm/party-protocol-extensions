@@ -25,7 +25,7 @@ silent.
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `defb05a6066cdf7e8949f9162f00589d38eef6ce` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `7b25b1aa4f41ff16e82315b321736042d0debf57` |
 | `country_code` | `https://github.com/unconfirmedlabs/country_code.git` | `b4c92cb7f772879335344d7b6499b5fa4eafef56` |
 | `language_code` | `https://github.com/unconfirmedlabs/language_code.git` | `61542357f3d2ff989d120185046def7cf6c8bdcb` |
 

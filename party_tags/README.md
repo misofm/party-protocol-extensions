@@ -74,7 +74,7 @@ Surfaced from `typed_set` (abort location `typed_set::typed_set`):
 ## Dependencies
 
 - [`miso_party`](https://github.com/misofm/party-protocol) at
-  `defb05a6066cdf7e8949f9162f00589d38eef6ce` — the authorization core.
+  `7b25b1aa4f41ff16e82315b321736042d0debf57` — the authorization core.
 - [`typed_set`](https://github.com/unconfirmedlabs/typed_set) at
   `b37474cbde166b7ddf8a3b615cd89f90182ace6f` — dynamic-field set storage,
   duplicate/not-present/capacity aborts, and field reclamation.
