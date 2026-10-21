@@ -10,12 +10,10 @@ new type there, never a change here — and adding one never rewrites another's.
 
 Storage mechanics come entirely from `platform_link`; this module adds only
 the party-specific cap gate and views. Writes are gated by the
-`PartyAdminCap` through `party::uid_mut(cap)`; views are permissionless. The
-primitive emits the authoritative rich event for each insertion, changed
-replacement, or present clear, including the parent address and existence transition.
-The phantom `Data` type identifies the slice. Equal replacements still perform the underlying write but emit no
-event. The legacy wrapper event types remain public for compatibility but are
-inert and never emitted.
+`PartyAdminCap` through `party::uid_mut(cap)`; views are permissionless. Events
+come from the primitive: each insertion or changed replacement emits the party
+ID and the full payload, each present clear the party ID. Equal replacements
+and absent clears are silent. This module declares no events of its own.
 
 ## What it stores
 
@@ -57,13 +55,10 @@ with `EUnauthorized` at `miso_party::party`.
 
 | Event | When | Payload |
 |---|---|---|
-| `PlatformLinkSetEvent<phantom Data>` | Successful insertion or changed replacement; emitted by `platform_link` | `parent_id`, `existed_before`, `exists_after` (34 BCS bytes); phantom `Data` identifies the slice |
-| `PlatformLinkRemovedEvent<phantom Data>` | Every successful present `clear_link`; emitted by `platform_link` | `parent_id`, `existed_before`, `exists_after` (34 BCS bytes); phantom `Data` identifies the slice |
-| `LinkSetEvent<phantom Data>` | Legacy compatibility declaration | none — inert; never emitted |
-| `LinkClearedEvent<phantom Data>` | Legacy compatibility declaration | none — inert; never emitted |
+| `PlatformLinkSetEvent<Data>` | Insertion or changed replacement; emitted by `platform_link` | `parent_id: ID` (the party), `data: Data` — at most 32 + 2 + 2000 BCS bytes for the party payload types |
+| `PlatformLinkRemovedEvent<phantom Data>` | Present `clear_link`; emitted by `platform_link` | `parent_id: ID` (32 bytes) |
 
-The phantom `Data` type parameter identifies the platform that changed. The
-primitive emits only the parent ID and existence flags.
+The `Data` type argument identifies the platform that changed.
 
 ## Errors
 
@@ -95,8 +90,8 @@ are local-path dependencies.
 
 ## Integrator notes
 
-- **Subscribe per platform.** Filter the primitive events by the phantom
-  `Data` type to know which platform changed, then re-read with `link<Data>`.
+- **Subscribe per platform.** Filter the primitive events by the `Data` type to
+  know which platform changed; the set event carries the new payload.
   `PlatformLinkRemovedEvent` appears only when a link was actually removed;
   absent and repeated clears are silent.
 - **URLs are rebuilt, never stored.** The payload carries a handle, id, or

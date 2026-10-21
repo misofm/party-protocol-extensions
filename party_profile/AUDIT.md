@@ -17,10 +17,9 @@ Profile dynamic field: required short bio (1–300 bytes), optional long bio
 validated language codes. Optional long-bio validation uses `Option::do_ref!`
 with direct named numeric error constants; no caller-selected abort code remains.
 Set and clear require the matching `PartyAdminCap`; views are permissionless.
-Changed set events carry address-based party/cap ids plus complete
-previous/current profile snapshots as raw UTF-8 bytes; equal replacements still
-write but are silent. Clear events carry the complete removed snapshot and
-absent clears are silent. Initial previous values use empty/none sentinels.
+Changed set events carry the party ID and every profile field; equal
+replacements are silent. Clear events carry the party ID and absent clears are
+silent.
 
 ## Exact manifest pins
 
@@ -35,7 +34,7 @@ The manifest has no local-path or floating dependencies.
 ## Verification
 
 - Package tests: **23/23**, including the retained validation and shared-party
-  coverage plus complete initial/replacement/clear snapshots, equal-write
+  coverage plus complete initial/replacement/clear event fields, equal-write
   silence, absent-clear silence, multibyte/order preservation, maximum BCS
   sizes, view silence, validation precedence, and wrong-cap set/clear paths.
 - Production instruction coverage: **100.00%**.

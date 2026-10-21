@@ -14,9 +14,9 @@ Release-ready. No security or correctness findings remain.
 `party_tags` is a state-attaching extension. It stores up to 30 exact-match
 free-form strings through `typed_set`, with each tag constrained to 1–50 bytes.
 All mutations require the matching `PartyAdminCap`; final removal reclaims the
-field, clear is idempotent, and views are permissionless. Mutation events carry
-party/cap addresses, raw tag bytes, and before/after counts; populated clear
-events carry the ordered raw tag snapshot. Normalization and rendering safety
+field, clear is idempotent, and views are permissionless. Add/remove events
+carry the party ID and the tag; populated clear events carry the party ID.
+Normalization and rendering safety
 remain client concerns.
 
 ## Exact manifest pins
@@ -31,7 +31,7 @@ The manifest has no local-path or floating dependencies.
 ## Verification
 
 - Package tests: **23/23**, preserving the original 9 and adding event
-  field/count/snapshot, BCS-size, silence, identity, ordering, and
+  field, BCS-size, silence, identity, ordering, and
   authorization-order coverage.
 - Production instruction coverage: **100.00%**.
 - End-to-end scenario covers Party share, cap transfer, later tag write, and

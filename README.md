@@ -45,7 +45,7 @@ for documenting an extension — required reading before adding one — lives in
 
 | Package | Owns |
 |---|---|
-| [`party_platform_link`](party_platform_link) | Party wiring for `PlatformLink<Data>` — `set_link` / `clear_link` / views + phantom-typed events |
+| [`party_platform_link`](party_platform_link) | Party wiring for `PlatformLink<Data>` — `set_link` / `clear_link` / views (events come from `platform_link`) |
 | [`party_profile`](party_profile) | Profile card: `bio_short`, `bio_long`, `country`, `languages` (validated code types) |
 | [`party_genre`](party_genre) | Genre-id set, proven at write time against the `genre` vocabulary |
 | [`party_roles`](party_roles) | Artist-type set: Artist/Producer/DJ/Composer/Songwriter/Band/Label/Collective + `Custom` |
@@ -69,12 +69,11 @@ current custody-agnostic inbox and accumulator Actions live in
 
 ## Conventions
 
-- **Events are change signals.** See [EVENT_PAYLOADS.md](EVENT_PAYLOADS.md) for
-  the complete event inventory and serialized payload bounds. Dynamic-field mutations are not observable
-  off-chain, so every write emits an event carrying `party_id`. Payloads are
-  not re-included — an indexer re-reads the field — except small, stable ones
-  (ids and short display strings: `party_media`'s quilt id and role/tag
-  strings), which ride in.
+- **Events are sufficient for indexing.** Dynamic-field mutations are not
+  observable off-chain, so every state change emits an event carrying
+  `party_id`, and an indexer never needs a secondary lookup: set events carry
+  the full new value, add/remove events the entry, clears the key. See
+  [EVENT_PAYLOADS.md](EVENT_PAYLOADS.md) for the inventory and payload bounds.
 - **Validation is split on purpose.** Primitives enforce set mechanics
   (duplicate / not-present / over-max — aborts come from `typed_set` or
   `platform_link` with their codes). Extensions enforce domain rules

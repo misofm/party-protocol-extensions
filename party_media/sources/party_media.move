@@ -13,10 +13,8 @@
 /// header is a client convention (quilt patch *identifiers*, e.g. "avatar" /
 /// "header"), derived off-chain — never stored here. Updating any image means
 /// re-storing the quilt and calling `set_media` with the new id.
-/// Each changed set emits the prior/resulting quilt ids and the authorizing cap
-/// address; equal replacements still write but do not emit. A clear emits the
-/// removed id only when a field existed. All writes are cap-gated through
-/// `party::uid_mut`, and views are permissionless.
+/// A changed set emits the new quilt id; a clear emits the party ID. Equal
+/// replacements and absent clears are silent.
 module party_media::party_media;
 
 use miso_party::party::{Party, PartyAdminCap};
@@ -46,73 +44,43 @@ public struct Media has store, drop {
 
 // === Events ===
 
-/// Emitted when a party's media quilt is set or replaced. The event carries
-/// the authorizing cap address and both the prior and resulting quilt ids so
-/// an indexer can reconcile the mutation without re-reading the field
-/// (dynamic-field mutations are not otherwise observable). On an insert,
-/// `existed_before` is false and `previous_quilt` is the zero sentinel.
+/// Emitted when a party's media quilt is set or changed; carries the new id.
 public struct MediaSetEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    existed_before: bool,
-    previous_quilt: u256,
+    party_id: ID,
     quilt: u256,
 }
 
-/// Emitted when a party's media is removed. No event is emitted when the
-/// field is absent. The event carries the authorizing cap address and the
-/// quilt id that was removed.
+/// Emitted when a party's media is removed.
 public struct MediaClearedEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    previous_quilt: u256,
+    party_id: ID,
 }
 
 // === Write API ===
 
 /// Sets (or replaces) the party's media quilt. Aborts on a zero id before
-/// authorization. Every successful call performs the requested insert or
-/// replacement. An event is emitted only when the quilt id changes; an initial
-/// nonzero attachment always emits.
+/// authorization. Emits the new id when it changes; an equal id is silent.
 public fun set_media(self: &mut Party, cap: &PartyAdminCap, quilt: u256) {
     assert!(quilt != 0, EZeroQuilt);
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
+    let party_id = object::id(self);
     let uid = self.uid_mut(cap);
-
-    let existed_before = df::exists(uid, MediaKey());
-    let mut previous_quilt = 0;
-    if (existed_before) {
-        previous_quilt = df::borrow<MediaKey, Media>(uid, MediaKey()).quilt;
-        df::borrow_mut<MediaKey, Media>(uid, MediaKey()).quilt = quilt;
+    if (df::exists(uid, MediaKey())) {
+        let media: &mut Media = df::borrow_mut(uid, MediaKey());
+        if (media.quilt == quilt) return;
+        media.quilt = quilt;
     } else {
         df::add(uid, MediaKey(), Media { quilt });
     };
-    if (!existed_before || previous_quilt != quilt) {
-        emit(MediaSetEvent {
-            party_id,
-            admin_cap_id,
-            existed_before,
-            previous_quilt,
-            quilt,
-        });
-    };
+    emit(MediaSetEvent { party_id, quilt });
 }
 
 /// Removes the party's media. Authorization happens before checking
-/// existence; an absent field is a silent no-op, while an existing field
-/// emits exactly one event containing the removed quilt id.
+/// existence; an absent field is a silent no-op.
 public fun clear_media(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
+    let party_id = object::id(self);
     let uid = self.uid_mut(cap);
     if (df::exists(uid, MediaKey())) {
-        let Media { quilt: previous_quilt } = df::remove(uid, MediaKey());
-        emit(MediaClearedEvent {
-            party_id,
-            admin_cap_id,
-            previous_quilt,
-        });
+        let Media { quilt: _ } = df::remove(uid, MediaKey());
+        emit(MediaClearedEvent { party_id });
     }
 }
 
@@ -133,27 +101,12 @@ public fun quilt(self: &Party): Option<u256> {
 
 /// Test-only accessor for every `MediaSetEvent` field, in declaration order.
 #[test_only]
-public fun set_event_fields(
-    event: &MediaSetEvent,
-): (address, address, bool, u256, u256) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.existed_before,
-        event.previous_quilt,
-        event.quilt,
-    )
+public fun set_event_fields(event: &MediaSetEvent): (ID, u256) {
+    (event.party_id, event.quilt)
 }
 
-/// Test-only accessor for every `MediaClearedEvent` field, in declaration
-/// order.
+/// Test-only accessor for every `MediaClearedEvent` field.
 #[test_only]
-public fun cleared_event_fields(
-    event: &MediaClearedEvent,
-): (address, address, u256) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.previous_quilt,
-    )
+public fun cleared_event_fields(event: &MediaClearedEvent): ID {
+    event.party_id
 }

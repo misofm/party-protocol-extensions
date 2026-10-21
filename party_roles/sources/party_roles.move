@@ -12,8 +12,8 @@
 /// the role type, name validation, the capacity, and the typed events.
 /// Duplicate / not-present / over-max aborts come from `typed_set` with its own
 /// error codes. Gated by the `PartyAdminCap`; views are permissionless.
-/// Mutation events carry the party and cap addresses, a stable kind/name pair,
-/// and before/after counts; a populated clear carries counts only.
+/// Add/remove events carry the party ID and the `ArtistRole` value (custom name
+/// included); a populated clear carries the party ID.
 module party_roles::party_roles;
 
 use miso_party::party::{Party, PartyAdminCap};
@@ -64,30 +64,19 @@ public enum ArtistRole has copy, drop, store {
 
 /// Emitted when a role is added to a party.
 public struct RoleAddedEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    role_kind: u8,
-    role_name: vector<u8>,
-    roles_count_before: u64,
-    roles_count_after: u64,
+    party_id: ID,
+    role: ArtistRole,
 }
 
 /// Emitted when a role is removed from a party.
 public struct RoleRemovedEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    role_kind: u8,
-    role_name: vector<u8>,
-    roles_count_before: u64,
-    roles_count_after: u64,
+    party_id: ID,
+    role: ArtistRole,
 }
 
 /// Emitted when a party's entire role set is removed.
 public struct RolesClearedEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    roles_count_before: u64,
-    roles_count_after: u64,
+    party_id: ID,
 }
 
 // === Role constructors ===
@@ -128,61 +117,26 @@ public fun role_name(self: &ArtistRole): String {
 /// Adds a role to the party. Aborts in `typed_set` if already held or the max
 /// is reached.
 public fun add_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
-    let role_kind = role_kind(&role);
-    let role_name = *role.name().as_bytes();
-    let uid = self.uid_mut(cap);
-    let roles_count_before = set::keys<RolesKey, ArtistRole>(uid, RolesKey()).length();
-    set::add(uid, RolesKey(), role, MAX_ROLES);
-    let roles_count_after = set::keys<RolesKey, ArtistRole>(uid, RolesKey()).length();
-    emit(RoleAddedEvent {
-        party_id,
-        admin_cap_id,
-        role_kind,
-        role_name,
-        roles_count_before,
-        roles_count_after,
-    });
+    let party_id = object::id(self);
+    set::add(self.uid_mut(cap), RolesKey(), role, MAX_ROLES);
+    emit(RoleAddedEvent { party_id, role });
 }
 
 /// Removes a role from the party. Aborts in `typed_set` if not held. The whole
 /// field is dropped when the last role leaves.
 public fun remove_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
-    let role_kind = role_kind(&role);
-    let role_name = *role.name().as_bytes();
-    let uid = self.uid_mut(cap);
-    let roles_count_before = set::keys<RolesKey, ArtistRole>(uid, RolesKey()).length();
-    set::remove(uid, RolesKey(), role);
-    let roles_count_after = set::keys<RolesKey, ArtistRole>(uid, RolesKey()).length();
-    emit(RoleRemovedEvent {
-        party_id,
-        admin_cap_id,
-        role_kind,
-        role_name,
-        roles_count_before,
-        roles_count_after,
-    });
+    let party_id = object::id(self);
+    set::remove(self.uid_mut(cap), RolesKey(), role);
+    emit(RoleRemovedEvent { party_id, role });
 }
 
 /// Removes the party's entire role set. No-op if none is set.
 public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
+    let party_id = object::id(self);
     let uid = self.uid_mut(cap);
     if (set::exists(uid, RolesKey())) {
-        let roles = set::keys<RolesKey, ArtistRole>(uid, RolesKey());
-        let roles_count_before = roles.length();
         set::clear<RolesKey, ArtistRole>(uid, RolesKey());
-        let roles_count_after = set::keys<RolesKey, ArtistRole>(uid, RolesKey()).length();
-        emit(RolesClearedEvent {
-            party_id,
-            admin_cap_id,
-            roles_count_before,
-            roles_count_after,
-        });
+        emit(RolesClearedEvent { party_id });
     }
 }
 
@@ -203,88 +157,22 @@ public fun roles(self: &Party): vector<ArtistRole> {
     set::keys(self.uid(), RolesKey())
 }
 
-// === Private Helpers ===
-
-/// Returns the stable kind discriminator used in role events.
-fun role_kind(self: &ArtistRole): u8 {
-    match (self) {
-        ArtistRole::Artist => 0,
-        ArtistRole::Producer => 1,
-        ArtistRole::Dj => 2,
-        ArtistRole::Composer => 3,
-        ArtistRole::Songwriter => 4,
-        ArtistRole::Band => 5,
-        ArtistRole::Label => 6,
-        ArtistRole::Collective => 7,
-        ArtistRole::Custom(_) => 8,
-    }
-}
-
 // === Test Functions ===
 
 /// Test-only accessor for every `RoleAddedEvent` field, in declaration order.
 #[test_only]
-public fun added_event_fields(
-    event: &RoleAddedEvent,
-): (address, address, u8, vector<u8>, u64, u64) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.role_kind,
-        event.role_name,
-        event.roles_count_before,
-        event.roles_count_after,
-    )
-}
-
-/// Test-only descriptive alias for `added_event_fields`.
-#[test_only]
-public fun role_added_event_fields(
-    event: &RoleAddedEvent,
-): (address, address, u8, vector<u8>, u64, u64) {
-    added_event_fields(event)
+public fun added_event_fields(event: &RoleAddedEvent): (ID, ArtistRole) {
+    (event.party_id, event.role)
 }
 
 /// Test-only accessor for every `RoleRemovedEvent` field, in declaration order.
 #[test_only]
-public fun removed_event_fields(
-    event: &RoleRemovedEvent,
-): (address, address, u8, vector<u8>, u64, u64) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.role_kind,
-        event.role_name,
-        event.roles_count_before,
-        event.roles_count_after,
-    )
+public fun removed_event_fields(event: &RoleRemovedEvent): (ID, ArtistRole) {
+    (event.party_id, event.role)
 }
 
-/// Test-only descriptive alias for `removed_event_fields`.
+/// Test-only accessor for every `RolesClearedEvent` field.
 #[test_only]
-public fun role_removed_event_fields(
-    event: &RoleRemovedEvent,
-): (address, address, u8, vector<u8>, u64, u64) {
-    removed_event_fields(event)
-}
-
-/// Test-only accessor for every `RolesClearedEvent` field, in declaration order.
-#[test_only]
-public fun cleared_event_fields(
-    event: &RolesClearedEvent,
-): (address, address, u64, u64) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.roles_count_before,
-        event.roles_count_after,
-    )
-}
-
-/// Test-only descriptive alias for `cleared_event_fields`.
-#[test_only]
-public fun roles_cleared_event_fields(
-    event: &RolesClearedEvent,
-): (address, address, u64, u64) {
-    cleared_event_fields(event)
+public fun cleared_event_fields(event: &RolesClearedEvent): ID {
+    event.party_id
 }

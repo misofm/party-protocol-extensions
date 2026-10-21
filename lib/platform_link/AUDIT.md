@@ -15,10 +15,9 @@ Release-ready. No security or correctness findings remain.
 `PlatformLink<Data>` and stores at most one value per `Data` type under any
 caller-supplied `UID`, using the phantom-typed `PlatformLinkKey<Data>`. It
 implements set/replace, optional read, borrow, remove, and idempotent clear.
-Changed set, remove, and present clear operations emit typed events with parent
-and defining-ID-qualified type bytes plus bounded BCS length/Blake2b-256
-summaries; equal set replacements still write silently, and full payloads are
-never copied into events. It contains no Party, capability,
+Changed set operations emit a typed event with the parent ID and the full
+payload; remove and present clear emit the parent ID. Equal set replacements
+are silent. It contains no Party, capability,
 Vault, Action, plugin, or fund logic; authorization belongs to its caller.
 Identifier and URL backstops are exactly 256 and 2000 bytes.
 
@@ -34,7 +33,7 @@ or floating Git dependencies.
 - Package tests: **9/9**, including **2** expected-failure paths (`borrow` and
   `remove` when absent), exact set/replace/remove and clear event assertions,
   typed parent/type streams, empty payload handling, and a 131072-byte payload
-  bounded-summary check.
+  emitted in full.
 - Production instruction coverage: **100.00%**.
 - Shared-Party workflow: not applicable; this primitive accepts a `UID` and
   owns no host object.

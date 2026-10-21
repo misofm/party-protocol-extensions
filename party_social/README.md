@@ -78,9 +78,8 @@ Read a payload back with `platform_link::data` — `link.data().handle()`.
 ## Events
 
 None — payloads are inert. `party_platform_link` delegates to `platform_link`,
-which emits the phantom-typed
-`PlatformLinkSetEvent<Data>` / `PlatformLinkRemovedEvent<Data>` (carrying `parent_id` and existence flags)
-when a link is set or cleared; indexers re-read the field.
+which emits `PlatformLinkSetEvent<Data>` (`parent_id` plus the full payload) /
+`PlatformLinkRemovedEvent<Data>` (`parent_id`) when a link is set or cleared.
 
 ## Errors
 

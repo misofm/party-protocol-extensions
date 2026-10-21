@@ -15,8 +15,8 @@ Release-ready. No security or correctness findings remain.
 replace-whole `vector<Cta>` dynamic field on a Party. Labels are 1–60 bytes,
 URLs are 1–2000 bytes, and the list is capped at 20. `set_ctas` and
 `clear_ctas` require the matching `PartyAdminCap`; views are permissionless.
-Set and clear events include primitive party/capability addresses plus complete
-ordered prior/resulting CTA bytes, and an absent clear is silent. The module
+Changed set events carry the party ID and the complete ordered CTA list; clear
+events carry the party ID; equal sets and absent clears are silent. The module
 contains no funds or automation entrypoints.
 
 ## Exact manifest pins
@@ -33,7 +33,7 @@ The manifest has no local-path or floating dependencies.
   CTA validators, list capacity ordering, equal-write silence, component
   changes, and wrong-cap set/replace/clear authorization.
 - Strict Testnet and Mainnet lint builds passed with warnings as errors.
-- Production instruction coverage: **255/255 instructions (100.00%)**.
+- Production instruction coverage: **100.00%**.
 - End-to-end scenario: Party creation and share, cap transfer, later cap-gated
   write to the shared Party, and permissionless read in another transaction.
 - Historical repository aggregate (not this package review): **77/77 tests on

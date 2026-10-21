@@ -13,11 +13,10 @@ Release-ready. No security or correctness findings remain.
 
 `party_media` is a state-attaching extension. It stores one nonzero Walrus
 quilt ID (`u256`) as a Party dynamic field. Set/replace and clear require the
-matching `PartyAdminCap`; reads are permissionless. Rich set events are emitted
-for inserts and changed replacements and carry the party/cap addresses,
-existence bit, and prior/resulting quilt ids (129-byte payload), while clear
-events carry the party/cap addresses and removed quilt id (96-byte payload).
-Equal replacements still write silently. Patch roles are an off-chain
+matching `PartyAdminCap`; reads are permissionless. Set events are emitted for
+inserts and changed replacements and carry the party ID and new quilt id
+(64-byte payload); clear events carry the party ID (32 bytes). Equal
+replacements are silent. Patch roles are an off-chain
 convention, and no media bytes or funds are stored.
 
 ## Exact manifest pins

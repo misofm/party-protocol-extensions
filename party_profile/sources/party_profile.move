@@ -11,11 +11,9 @@
 /// validated code primitives (`country_code`, `language_code`), so a stored value
 /// is always a real code. The party's `name` is NOT duplicated here — it lives on
 /// the core `Party` (`party::set_name`) — and the join date comes from the party's
-/// creation event (the indexer has it for free). Each changed set emits a
-/// compact country/language context and the authorizing cap address; equal
-/// replacements still write but do not emit. A clear emits only when a profile
-/// exists. Bios remain in storage and are read on demand. All writes are
-/// cap-gated through `party::uid_mut`, and views are permissionless.
+/// creation event (the indexer has it for free). A changed set emits every
+/// profile field; a clear emits the party ID. Equal replacements and absent
+/// clears are silent.
 module party_profile::party_profile;
 
 use country_code::country_code::CountryCode;
@@ -75,35 +73,25 @@ public struct Profile has store, drop {
 
 // === Events ===
 
-/// Emitted when a party's profile is set or updated. Retains compact validated
-/// country and ordered language codes; bios are read from the dynamic field.
+/// Emitted when a party's profile is set or changed; carries the full profile.
 public struct PartyProfileSetEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    had_profile: bool,
-    previous_country: Option<vector<u8>>,
-    previous_languages: vector<vector<u8>>,
-    country: Option<vector<u8>>,
-    languages: vector<vector<u8>>,
+    party_id: ID,
+    bio_short: String,
+    bio_long: Option<String>,
+    country: Option<CountryCode>,
+    languages: vector<LanguageCode>,
 }
 
-/// Emitted when a party's profile is cleared, carrying removed country and
-/// language codes. No event is emitted when the field is absent.
+/// Emitted when a party's profile is cleared.
 public struct PartyProfileClearedEvent has copy, drop {
-    party_id: address,
-    admin_cap_id: address,
-    previous_country: Option<vector<u8>>,
-    previous_languages: vector<vector<u8>>,
+    party_id: ID,
 }
 
 // === Write API ===
 
-/// Sets (creates or replaces) the party's whole profile. Validation and profile
-/// construction happen before authorization, preserving validation precedence;
-/// authorization happens before any dynamic-field snapshot or mutation. Every
-/// successful call performs the requested insert or replacement. An event is
-/// emitted only when the complete profile value changes; an initial profile,
-/// including one with explicit empty optional fields, always emits.
+/// Sets (creates or replaces) the party's whole profile. Validation happens
+/// before authorization. Emits the full profile when it changes; an initial
+/// profile always emits, an equal replacement does not.
 public fun set_profile(
     self: &mut Party,
     cap: &PartyAdminCap,
@@ -119,58 +107,28 @@ public fun set_profile(
     });
     validate_languages(&languages);
 
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
+    let party_id = object::id(self);
+    let event = PartyProfileSetEvent { party_id, bio_short, bio_long, country, languages };
     let profile = Profile { bio_short, bio_long, country, languages };
     let uid = self.uid_mut(cap);
-
-    let had_profile = df::exists(uid, ProfileKey());
-    let previous_country = if (had_profile) {
-        optional_country_bytes(&df::borrow<ProfileKey, Profile>(uid, ProfileKey()).country)
-    } else { option::none() };
-    let previous_languages = if (had_profile) {
-        language_bytes(&df::borrow<ProfileKey, Profile>(uid, ProfileKey()).languages)
-    } else { vector[] };
-    let country = optional_country_bytes(&profile.country);
-    let languages = language_bytes(&profile.languages);
-    let value_changed = !had_profile
-        || df::borrow<ProfileKey, Profile>(uid, ProfileKey()) != &profile;
-
-    if (had_profile) {
-        *df::borrow_mut(uid, ProfileKey()) = profile;
+    if (df::exists(uid, ProfileKey())) {
+        let previous: &mut Profile = df::borrow_mut(uid, ProfileKey());
+        if (previous == &profile) return;
+        *previous = profile;
     } else {
         df::add(uid, ProfileKey(), profile);
     };
-    if (value_changed) {
-        emit(PartyProfileSetEvent {
-            party_id,
-            admin_cap_id,
-            had_profile,
-            previous_country,
-            previous_languages,
-            country,
-            languages,
-        });
-    };
+    emit(event);
 }
 
 /// Removes the party's profile. Authorization happens before checking
-/// existence; an absent field is a silent no-op, while an existing field is
-/// removed and emits exactly one compact change event.
+/// existence; an absent field is a silent no-op.
 public fun clear_profile(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self).to_address();
-    let admin_cap_id = object::id(cap).to_address();
+    let party_id = object::id(self);
     let uid = self.uid_mut(cap);
     if (df::exists(uid, ProfileKey())) {
-        let previous = df::remove<ProfileKey, Profile>(uid, ProfileKey());
-        let previous_country = optional_country_bytes(&previous.country);
-        let previous_languages = language_bytes(&previous.languages);
-        emit(PartyProfileClearedEvent {
-            party_id,
-            admin_cap_id,
-            previous_country,
-            previous_languages,
-        });
+        let _: Profile = df::remove(uid, ProfileKey());
+        emit(PartyProfileClearedEvent { party_id });
     }
 }
 
@@ -194,26 +152,6 @@ public fun languages(self: &Profile): vector<LanguageCode> { self.languages }
 
 // === Private Functions ===
 
-/// Copies an optional validated country code to an optional raw byte vector.
-fun optional_country_bytes(value: &Option<CountryCode>): Option<vector<u8>> {
-    let mut result = option::none();
-    value.do_ref!(|value| {
-        let code = country_code::country_code::code(value);
-        result.fill(*code.as_bytes());
-    });
-    result
-}
-
-/// Copies validated language codes to raw byte vectors while preserving order.
-fun language_bytes(values: &vector<LanguageCode>): vector<vector<u8>> {
-    let mut result = vector[];
-    values.do_ref!(|value| {
-        let code = language_code::language_code::code(value);
-        result.push_back(*code.as_bytes());
-    });
-    result
-}
-
 fun validate_bio_short(bio_short: &String) {
     assert!(!bio_short.is_empty(), EEmptyBioShort);
     assert!(bio_short.length() <= MAX_BIO_SHORT_LENGTH, EBioShortTooLong);
@@ -236,44 +174,12 @@ fun validate_languages(languages: &vector<LanguageCode>) {
 #[test_only]
 public fun set_event_fields(
     event: &PartyProfileSetEvent,
-): (address, address, bool, Option<vector<u8>>, vector<vector<u8>>, Option<vector<u8>>, vector<vector<u8>>) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.had_profile,
-        event.previous_country,
-        event.previous_languages,
-        event.country,
-        event.languages,
-    )
+): (ID, String, Option<String>, Option<CountryCode>, vector<LanguageCode>) {
+    (event.party_id, event.bio_short, event.bio_long, event.country, event.languages)
 }
 
-/// Test-only descriptive alias for `set_event_fields`.
+/// Test-only accessor for every `PartyProfileClearedEvent` field.
 #[test_only]
-public fun profile_set_event_fields(
-    event: &PartyProfileSetEvent,
-): (address, address, bool, Option<vector<u8>>, vector<vector<u8>>, Option<vector<u8>>, vector<vector<u8>>) {
-    set_event_fields(event)
-}
-
-/// Test-only accessor for every `PartyProfileClearedEvent` field, in declaration
-/// order.
-#[test_only]
-public fun cleared_event_fields(
-    event: &PartyProfileClearedEvent,
-): (address, address, Option<vector<u8>>, vector<vector<u8>>) {
-    (
-        event.party_id,
-        event.admin_cap_id,
-        event.previous_country,
-        event.previous_languages,
-    )
-}
-
-/// Test-only descriptive alias for `cleared_event_fields`.
-#[test_only]
-public fun profile_cleared_event_fields(
-    event: &PartyProfileClearedEvent,
-): (address, address, Option<vector<u8>>, vector<vector<u8>>) {
-    cleared_event_fields(event)
+public fun cleared_event_fields(event: &PartyProfileClearedEvent): ID {
+    event.party_id
 }

@@ -15,9 +15,8 @@ Release-ready. No security or correctness findings remain.
 `ArtistRole` values through `typed_set`: eight closed canonical variants plus a
 validated `Custom` name of 1–60 bytes. All mutations require the matching
 `PartyAdminCap`; final removal reclaims the field, clear is idempotent, and
-views are permissionless. Typed events include the party and cap addresses,
-stable role kind/name pairs, and before/after counts; clear snapshots all
-removed roles. Exact enum equality deliberately distinguishes a canonical role
+views are permissionless. Add/remove events carry the party ID and the
+`ArtistRole` value; clear carries the party ID. Exact enum equality deliberately distinguishes a canonical role
 from a same-spelled custom role.
 
 ## Exact manifest pins

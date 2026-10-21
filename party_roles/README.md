@@ -54,15 +54,14 @@ with `EUnauthorized` at `miso_party::party`.
 
 | Event | When | Payload |
 |---|---|---|
-| `RoleAddedEvent` | `add_role` | `party_id`, `admin_cap_id`, `role_kind`, `role_name`, `roles_count_before`, `roles_count_after` |
-| `RoleRemovedEvent` | `remove_role` | `party_id`, `admin_cap_id`, `role_kind`, `role_name`, `roles_count_before`, `roles_count_after` |
-| `RolesClearedEvent` | `clear_roles`, only when a set existed | `party_id`, `admin_cap_id`, `roles_count_before`, `roles_count_after` |
+| `RoleAddedEvent` | `add_role` | `party_id: ID`, `role: ArtistRole` (33 bytes canonical, at most 94 bytes `Custom`) |
+| `RoleRemovedEvent` | `remove_role` | `party_id: ID`, `role: ArtistRole` (same bounds) |
+| `RolesClearedEvent` | `clear_roles`, only when a set existed | `party_id: ID` (32 bytes) |
 
-`role_kind` is a private event discriminator: Artist 0, Producer 1, Dj 2,
-Composer 3, Songwriter 4, Band 5, Label 6, Collective 7, and Custom 8.
-The kind/name pair deliberately distinguishes canonical `Artist` from
-`Custom("Artist")`. A populated clear emits one event; an absent clear is
-authorized but silent. Clear events carry counts rather than whole role lists.
+`role` is the enum value itself (variant name, plus the name for `Custom`), so
+canonical `Artist` and `Custom("Artist")` stay distinct. Display names
+(`Dj` renders as `DJ`) are the fixed mapping in `role_name`. A populated clear
+emits one event; an absent clear is authorized but silent.
 
 ## Errors
 
@@ -100,8 +99,6 @@ Both are exact Git pins; this manifest has no local-path dependencies.
   and sanitize before rendering.
 - Equality is on the whole enum value: `Custom("Artist")` does not collide
   with `Artist`, and the two can be held at once.
-- Add and remove events carry the stable kind/name pair, `party_id`,
-  `admin_cap_id`, and before/after counts, so an indexer can track them
-  without re-reading. `RolesClearedEvent` carries
-  counts ending at zero, so no re-read is needed on clear.
+- Add and remove events carry the `ArtistRole` value, so an indexer tracks the
+  set without re-reading; on `RolesClearedEvent`, drop the whole set.
 - `roles()` returns roles in insertion order.

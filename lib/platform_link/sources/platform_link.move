@@ -59,20 +59,15 @@ public struct PlatformLink<Data: copy + drop + store> has copy, drop, store {
 /// `phantom Data` gives each platform its own field.
 public struct PlatformLinkKey<phantom Data>() has copy, drop, store;
 
-/// Emitted when a platform link is inserted or replaced. The phantom Data
-/// type identifies the slice; the payload contains only parent and existence.
-public struct PlatformLinkSetEvent<phantom Data> has copy, drop {
-    parent_id: address,
-    existed_before: bool,
-    exists_after: bool,
+/// Emitted when a platform link is inserted or changed; carries the new payload.
+public struct PlatformLinkSetEvent<Data: copy + drop> has copy, drop {
+    parent_id: ID,
+    data: Data,
 }
 
-/// Emitted when a platform link is removed. The phantom Data type identifies
-/// the slice; no payload serialization or hashing is performed for events.
+/// Emitted when a platform link is removed. The phantom `Data` is the key.
 public struct PlatformLinkRemovedEvent<phantom Data> has copy, drop {
-    parent_id: address,
-    existed_before: bool,
-    exists_after: bool,
+    parent_id: ID,
 }
 
 // === Constructor / accessor ===
@@ -99,29 +94,18 @@ public fun exists_<Data: copy + drop + store>(uid: &UID): bool {
 }
 
 /// Sets the `PlatformLink<Data>` under `uid`, replacing any existing one.
-/// Emits `PlatformLinkSetEvent<Data>` with the existence transition
-/// only when the complete `Data` value changes. Equal
-/// replacements still write the new value but do not emit.
+/// Emits `PlatformLinkSetEvent<Data>` with the new payload when the value
+/// changes; an equal replacement is a no-op.
 public fun set<Data: copy + drop + store>(uid: &mut UID, link: PlatformLink<Data>) {
+    let data = link.data;
     if (df::exists(uid, PlatformLinkKey<Data>())) {
-        let previous: &PlatformLink<Data> = df::borrow(uid, PlatformLinkKey<Data>());
-        let value_changed = previous.data != link.data;
-        *df::borrow_mut(uid, PlatformLinkKey<Data>()) = link;
-        if (value_changed) {
-            emit(PlatformLinkSetEvent<Data> {
-                parent_id: uid.to_address(),
-                existed_before: true,
-                exists_after: true,
-            });
-        };
+        let previous: &mut PlatformLink<Data> = df::borrow_mut(uid, PlatformLinkKey<Data>());
+        if (previous.data == data) return;
+        *previous = link;
     } else {
         df::add(uid, PlatformLinkKey<Data>(), link);
-        emit(PlatformLinkSetEvent<Data> {
-            parent_id: uid.to_address(),
-            existed_before: false,
-            exists_after: true,
-        });
-    }
+    };
+    emit(PlatformLinkSetEvent<Data> { parent_id: uid.to_inner(), data });
 }
 
 /// The stored `PlatformLink<Data>`, or `none` if absent.
@@ -140,15 +124,11 @@ public fun borrow<Data: copy + drop + store>(uid: &UID): &PlatformLink<Data> {
 }
 
 /// Removes and returns the stored link. Aborts if none is stored. Emits
-/// `PlatformLinkRemovedEvent<Data>` for the removed payload.
+/// `PlatformLinkRemovedEvent<Data>`.
 public fun remove<Data: copy + drop + store>(uid: &mut UID): PlatformLink<Data> {
     assert!(df::exists(uid, PlatformLinkKey<Data>()), ENoLink);
     let link: PlatformLink<Data> = df::remove(uid, PlatformLinkKey<Data>());
-    emit(PlatformLinkRemovedEvent<Data> {
-        parent_id: uid.to_address(),
-        existed_before: true,
-        exists_after: false,
-    });
+    emit(PlatformLinkRemovedEvent<Data> { parent_id: uid.to_inner() });
     link
 }
 
@@ -156,48 +136,20 @@ public fun remove<Data: copy + drop + store>(uid: &mut UID): PlatformLink<Data> 
 public fun clear<Data: copy + drop + store>(uid: &mut UID) {
     if (df::exists(uid, PlatformLinkKey<Data>())) {
         let _: PlatformLink<Data> = df::remove(uid, PlatformLinkKey<Data>());
-        emit(PlatformLinkRemovedEvent<Data> {
-            parent_id: uid.to_address(),
-            existed_before: true,
-            exists_after: false,
-        });
+        emit(PlatformLinkRemovedEvent<Data> { parent_id: uid.to_inner() });
     }
 }
 
-// === Test-only event accessors ===
+// === Test Functions ===
 
-/// Reads `parent_id` from a set event in tests.
+/// Test-only accessor for every `PlatformLinkSetEvent` field, in declaration order.
 #[test_only]
-public fun set_event_parent_id<Data>(event: &PlatformLinkSetEvent<Data>): address {
+public fun set_event_fields<Data: copy + drop>(event: &PlatformLinkSetEvent<Data>): (ID, Data) {
+    (event.parent_id, event.data)
+}
+
+/// Test-only accessor for every `PlatformLinkRemovedEvent` field.
+#[test_only]
+public fun removed_event_fields<Data>(event: &PlatformLinkRemovedEvent<Data>): ID {
     event.parent_id
-}
-
-/// Reads `existed_before` from a set event in tests.
-#[test_only]
-public fun set_event_existed_before<Data>(event: &PlatformLinkSetEvent<Data>): bool {
-    event.existed_before
-}
-
-/// Reads `exists_after` from a set event in tests.
-#[test_only]
-public fun set_event_exists_after<Data>(event: &PlatformLinkSetEvent<Data>): bool {
-    event.exists_after
-}
-
-/// Reads `parent_id` from a removed event in tests.
-#[test_only]
-public fun removed_event_parent_id<Data>(event: &PlatformLinkRemovedEvent<Data>): address {
-    event.parent_id
-}
-
-/// Reads `existed_before` from a removed event in tests.
-#[test_only]
-public fun removed_event_existed_before<Data>(event: &PlatformLinkRemovedEvent<Data>): bool {
-    event.existed_before
-}
-
-/// Reads `exists_after` from a removed event in tests.
-#[test_only]
-public fun removed_event_exists_after<Data>(event: &PlatformLinkRemovedEvent<Data>): bool {
-    event.exists_after
 }

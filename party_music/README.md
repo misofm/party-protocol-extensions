@@ -77,8 +77,8 @@ Declared with `public use fun`, so they read as methods —
 
 None — payload types only. Setting or clearing one of these links on a
 party is a `party_platform_link` write delegated to `platform_link`, which emits
-`PlatformLinkSetEvent<Data>` / `PlatformLinkRemovedEvent<Data>` (carrying `parent_id`
-and existence flags): an indexer sees which platform changed and re-reads the field.
+`PlatformLinkSetEvent<Data>` (`parent_id` plus the full payload) /
+`PlatformLinkRemovedEvent<Data>` (`parent_id`).
 
 ## Errors
 
@@ -116,4 +116,4 @@ above.
 - Artist-level only: track, album, and release links belong to the
   protocol's DSP-link extension, not to these payloads.
 - Index on `PlatformLinkSetEvent<SpotifyData>` / `PlatformLinkRemovedEvent<SpotifyData>`
-  and the like, and re-read the field — events carry only identity and existence context.
+  and the like; the set event carries the payload, so no re-read is needed.

@@ -81,8 +81,10 @@ Declared with `public use fun`, so they call as methods on the payload —
 
 ## Events
 
-None — this package defines payloads only. `party_platform_link` emits the
-phantom-typed change events carrying `party_id`.
+None — this package defines payloads only. Setting or clearing a link through
+`party_platform_link` emits `platform_link`'s `PlatformLinkSetEvent<Data>`
+(`parent_id` plus the full payload) / `PlatformLinkRemovedEvent<Data>`
+(`parent_id`).
 
 ## Errors
 
@@ -120,8 +122,8 @@ above.
   scheme and sanitize before rendering or linking.
 - Length limits are bytes (`String::length`), not characters — multi-byte
   UTF-8 burns the budget faster.
-- Nothing here emits events; watch `party_platform_link`'s events and re-read
-  the field on change.
+- Nothing here emits events; watch `platform_link`'s typed events, which carry
+  the payload.
 - For the URL-based payloads the URL is the identity, so a moved page means a
   new `set` with the new URL (replacing in place) — there is nothing to
   migrate.

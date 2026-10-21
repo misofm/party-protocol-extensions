@@ -27,12 +27,11 @@ platform values only; `party_platform_link` supplies their cap-gated storage.
    verification, which is gated by Miso's cap and lives *outside* the party.
 5. **No PII/UI-state on-chain.** Emails, payout addresses, fees, and layout/theme
    config are off-chain or modeled as links; on-chain is permanent and public.
-6. **Change events describe state changes.** Setters still validate, authorize,
-   and perform equal-value replacements, but suppress a redundant event. An
-   initial attachment, including an explicitly empty value, remains eventful;
-   clearing an absent value is silent. Event payloads omit bios, URLs, CTA
-   lists, and bulk role/tag text; compact codes, counts, and bounded relationship
-   IDs retain useful context. See [EVENT_PAYLOADS.md](EVENT_PAYLOADS.md).
+6. **Events are sufficient for indexing.** Set events carry the full new value,
+   add/remove events the entry, clears the key, so an indexer never reads object
+   storage. Equal-value replacements and absent clears are silent; an initial
+   attachment, including an explicitly empty value, emits. See
+   [EVENT_PAYLOADS.md](EVENT_PAYLOADS.md).
 
 ## Where each field lives
 
@@ -57,7 +56,7 @@ Two structural facts that remove large parts of the wishlist:
 |---|---|
 | `lib/platform_link` | `PlatformLink<Data>` primitive — one typed link per platform, stored on any UID |
 | [`unconfirmedlabs/typed_set`](https://github.com/unconfirmedlabs/typed_set) | Bounded-set primitive — one `VecSet<T>` per key type on any UID; dup/max checks, field reclamation on empty |
-| `party_platform_link` | Party wiring: `set_link<Data>` / `clear_link` / views + phantom events |
+| `party_platform_link` | Party wiring: `set_link<Data>` / `clear_link` / views (events come from `platform_link`) |
 | `party_social` (payload) | Pure handle payloads: X, Instagram, Threads, TikTok, YouTube, Discord, Telegram, Reddit, Twitch, Facebook |
 | `party_music` (payload) | Pure artist-profile payloads: Spotify, Bandcamp, SoundCloud, Apple Music, Deezer, Tidal, Amazon, Audiomack |
 | `party_profile` (v1) | bio_short, bio_long, country (`country_code`), languages (`language_code`) |

@@ -7,9 +7,9 @@ one blob each, which matters when the platform sponsors storage. Only the
 quilt's blob id is held on-chain, as a dynamic field on the party's `UID`,
 gated by the `PartyAdminCap`; views are permissionless. The chain is
 deliberately role-agnostic: which patch is the avatar vs the header is a
-client convention, derived off-chain — never stored here. Changed mutations
-emit a complete, fixed-size event snapshot; equal replacements still write but
-are silent, and an absent clear is silent.
+client convention, derived off-chain — never stored here. A changed set emits
+the new quilt id, a present clear the party ID; equal replacements and absent
+clears are silent.
 
 ## What it stores
 
@@ -17,8 +17,7 @@ are silent, and an absent clear is silent.
 - Value: `Media { quilt: u256 }` — the Walrus quilt blob id holding all of
   the party's images. Individual images are quilt patches addressed by
   identifier ("avatar", "header", …); those roles are not stored.
-- `set_media` replaces the id in place; an identical replacement is a silent
-  write;
+- `set_media` replaces the id in place; an identical replacement is silent;
   `clear_media` removes the field entirely and is a no-op when none is set.
 
 ## API
@@ -31,8 +30,8 @@ aborts with `EUnauthorized` (0) at `miso_party::party`.
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set_media(party, cap, quilt)` | Set or replace the party's media quilt; changed values emit one complete `MediaSetEvent`, equal replacements still write silently | `EZeroQuilt` (0) on a zero quilt id; wrong cap at `miso_party::party` |
-| `clear_media(party, cap)` | Remove the party's media and emit its prior quilt — no-op (and silent) when unset | wrong cap at `miso_party::party` |
+| `set_media(party, cap, quilt)` | Set or replace the party's media quilt; changed values emit `MediaSetEvent`, equal replacements are silent | `EZeroQuilt` (0) on a zero quilt id; wrong cap at `miso_party::party` |
+| `clear_media(party, cap)` | Remove the party's media and emit `MediaClearedEvent` — no-op (and silent) when unset | wrong cap at `miso_party::party` |
 
 ### Views
 
@@ -45,8 +44,8 @@ aborts with `EUnauthorized` (0) at `miso_party::party`.
 
 | Event | When | Payload |
 |---|---|---|
-| `MediaSetEvent` | Quilt set or replaced with a different id | `party_id`, `admin_cap_id`, `existed_before`, `previous_quilt`, `quilt`; the serialized payload is 129 bytes, and `previous_quilt` is zero only when `existed_before` is false. Equal replacements emit no event |
-| `MediaClearedEvent` | Existing media removed; never on an absent clear | `party_id`, `admin_cap_id`, `previous_quilt`; the serialized payload is 96 bytes |
+| `MediaSetEvent` | Quilt set or replaced with a different id | `party_id: ID`, `quilt: u256` (64 bytes). Equal replacements emit no event |
+| `MediaClearedEvent` | Existing media removed; never on an absent clear | `party_id: ID` (32 bytes) |
 
 ## Errors
 
@@ -75,10 +74,7 @@ aborts with `EUnauthorized` (0) at `miso_party::party`.
 - **One quilt, not one blob per image.** A single storage reservation is
   markedly cheaper than one blob each, which matters when the platform
   sponsors storage.
-- Indexers can reconcile a write from `MediaSetEvent` alone: `existed_before`
-  distinguishes insert from replacement, and the event carries both quilt
-  ids plus the authorizing cap address. On an insert, `previous_quilt` is a
-  zero sentinel; zero is rejected as a new quilt id.
-- `MediaClearedEvent` means the field is gone and carries the exact removed
-  quilt id. A no-op `clear_media` emits nothing, but still authorizes first,
+- Indexers set the party's quilt from `MediaSetEvent.quilt` alone.
+- `MediaClearedEvent` means the field is gone. A no-op `clear_media` emits
+  nothing, but still authorizes first,
   so a wrong cap aborts even when no media is stored.

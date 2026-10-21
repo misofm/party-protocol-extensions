@@ -35,8 +35,7 @@ fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
 fun set_and_read_full_profile() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     assert!(!profile::has_profile(&p));
     profile::set_profile(
@@ -50,22 +49,13 @@ fun set_and_read_full_profile() {
 
     let events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(events.length(), 1);
-    let (
-        event_party_id,
-        event_cap_id,
-        had_profile,
-        previous_country,
-        previous_languages,
-        country,
-        languages,
-    ) = profile::set_event_fields(&events[0]);
+    let (event_party_id, bio_short, bio_long, country, languages) =
+        profile::set_event_fields(&events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!had_profile);
-    assert_eq!(previous_country, option::none());
-    assert_eq!(previous_languages, vector[]);
-    assert_eq!(country, option::some(b"JP"));
-    assert_eq!(languages, vector[b"en", b"ja"]);
+    assert_eq!(bio_short, b"Short bio.".to_string());
+    assert_eq!(bio_long, option::some(b"A much longer biography.".to_string()));
+    assert_eq!(country, option::some(cc::new(b"JP".to_string())));
+    assert_eq!(languages, vector[lc::new(b"en".to_string()), lc::new(b"ja".to_string())]);
 
     assert!(profile::has_profile(&p));
     let card = profile::profile(&p);
@@ -82,8 +72,7 @@ fun set_and_read_full_profile() {
 fun replace_profile_in_place() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     // Start with every optional field populated, then replace with the
     // minimal valid card. The whole card is replaced, not stacked.
@@ -106,20 +95,11 @@ fun replace_profile_in_place() {
 
     let set_events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(set_events.length(), 2);
-    let (
-        event_party_id,
-        event_cap_id,
-        had_profile,
-        previous_country,
-        previous_languages,
-        country,
-        languages,
-    ) = profile::set_event_fields(&set_events[1]);
+    let (event_party_id, bio_short, bio_long, country, languages) =
+        profile::set_event_fields(&set_events[1]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(had_profile);
-    assert_eq!(previous_country, option::some(b"JP"));
-    assert_eq!(previous_languages, vector[b"en", b"ja"]);
+    assert_eq!(bio_short, b"second".to_string());
+    assert_eq!(bio_long, option::none());
     assert_eq!(country, option::none());
     assert_eq!(languages, vector[]);
 
@@ -129,7 +109,7 @@ fun replace_profile_in_place() {
     assert!(card.country().is_none());
     assert_eq!(card.languages().length(), 0);
 
-    // An identical replacement is still a write but emits no redundant event.
+    // An identical replacement is a no-op and emits nothing.
     profile::set_profile(&mut p, &cap, b"second".to_string(), option::none(), option::none(), vector[]);
     let set_events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(set_events.length(), 2);
@@ -188,8 +168,7 @@ fun each_profile_component_change_emits() {
 fun clear_profile_removes_it() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     profile::set_profile(
         &mut p,
         &cap,
@@ -203,23 +182,14 @@ fun clear_profile_removes_it() {
 
     let cleared_events = event::events_by_type<profile::PartyProfileClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
-    let (event_party_id, event_cap_id, previous_country, previous_languages) =
-        profile::cleared_event_fields(&cleared_events[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(previous_country, option::some(b"DE"));
-    assert_eq!(previous_languages, vector[b"de"]);
+    assert_eq!(profile::cleared_event_fields(&cleared_events[0]), party_id);
 
-    // A minimal profile is also a real attached field and its clear carries
-    // the minimal country/language context.
+    // A minimal profile is also a real attached field and its clear emits.
     profile::set_profile(&mut p, &cap, b"minimal".to_string(), option::none(), option::none(), vector[]);
     profile::clear_profile(&mut p, &cap);
     let cleared_events = event::events_by_type<profile::PartyProfileClearedEvent>();
     assert_eq!(cleared_events.length(), 2);
-    let (_, _, previous_country, previous_languages) =
-        profile::cleared_event_fields(&cleared_events[1]);
-    assert_eq!(previous_country, option::none());
-    assert_eq!(previous_languages, vector[]);
+    assert_eq!(profile::cleared_event_fields(&cleared_events[1]), party_id);
 
     profile::clear_profile(&mut p, &cap); // no-op
     assert_eq!(event::events_by_type<profile::PartyProfileClearedEvent>().length(), 2);
@@ -272,14 +242,11 @@ fun stored_multibyte_values_and_event_language_order() {
 
     let events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(events.length(), 1);
-    let (_, _, had_profile, previous_country,
-        previous_languages, country, languages) =
-        profile::set_event_fields(&events[0]);
-    assert!(!had_profile);
-    assert_eq!(previous_country, option::none());
-    assert_eq!(previous_languages, vector[]);
-    assert_eq!(country, option::some(b"JP"));
-    assert_eq!(languages, vector[b"ja", b"en"]);
+    let (_, bio_short, bio_long, country, languages) = profile::set_event_fields(&events[0]);
+    assert_eq!(bio_short, short);
+    assert_eq!(bio_long, option::some(long));
+    assert_eq!(country, option::some(cc::new(b"JP".to_string())));
+    assert_eq!(languages, vector[lc::new(b"ja".to_string()), lc::new(b"en".to_string())]);
     assert_eq!(profile::profile(&p).bio_short(), short);
     assert_eq!(profile::profile(&p).bio_long(), option::some(long));
 
@@ -288,7 +255,7 @@ fun stored_multibyte_values_and_event_language_order() {
 }
 
 #[test]
-fun maximum_profile_event_sizes_are_stable() {
+fun maximum_profile_is_emitted_in_full() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
     let languages = vector[
@@ -309,7 +276,11 @@ fun maximum_profile_event_sizes_are_stable() {
         languages,
     );
     let set_events = event::events_by_type<profile::PartyProfileSetEvent>();
-    assert_eq!(bcs::to_bytes(&set_events[0]).length(), 102);
+    // 32 (ID) + (2 + 300) + (1 + 2 + 8192) + (1 + 1 + 2) + (1 + 10 * 3).
+    assert_eq!(bcs::to_bytes(&set_events[0]).length(), 8564);
+    let (_, bio_short, bio_long, _, _) = profile::set_event_fields(&set_events[0]);
+    assert_eq!(bio_short, long_string(300));
+    assert_eq!(bio_long, option::some(long_string(8192)));
 
     let languages = vector[
         lc::new(b"aa".to_string()), lc::new(b"ab".to_string()),
@@ -327,17 +298,18 @@ fun maximum_profile_event_sizes_are_stable() {
         languages,
     );
     let set_events = event::events_by_type<profile::PartyProfileSetEvent>();
-    assert_eq!(bcs::to_bytes(&set_events[1]).length(), 135);
+    assert_eq!(bcs::to_bytes(&set_events[1]).length(), 8564);
     profile::set_profile(&mut p, &cap, b"tiny".to_string(), option::none(),
         option::some(cc::new(b"US".to_string())), languages);
     let tiny_events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(tiny_events.length(), 3);
-    assert_eq!(bcs::to_bytes(&tiny_events[2]).length(), 135);
+    // 32 (ID) + (1 + 4) + 1 + (1 + 1 + 2) + (1 + 10 * 3).
+    assert_eq!(bcs::to_bytes(&tiny_events[2]).length(), 73);
     assert_eq!(profile::profile(&p).bio_short(), b"tiny".to_string());
 
     profile::clear_profile(&mut p, &cap);
     let cleared_events = event::events_by_type<profile::PartyProfileClearedEvent>();
-    assert_eq!(bcs::to_bytes(&cleared_events[0]).length(), 99);
+    assert_eq!(bcs::to_bytes(&cleared_events[0]).length(), 32);
 
     destroy(p);
     destroy(cap);

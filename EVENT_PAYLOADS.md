@@ -1,84 +1,78 @@
 # Event payload inventory
 
-Events preserve identifiers, authorization provenance, compact business context,
-and meaningful state changes. Bios, CTA labels/URLs, and bulk role/tag text stay
-in object storage and are read on demand. Setters still validate, authorize,
-and write equal replacements without emitting; first attachment (including an
-empty CTA list) emits, and absent clear stays silent.
+## Rule
+
+An indexer that sees every event of these packages, plus the transaction
+envelope, can build and keep current its index of every party field they
+manage without reading object storage or making an RPC call:
+
+- **Set** events carry the full new value (bios, CTA lists, link payloads).
+- **Add/remove** events carry the full entry (tag, `ArtistRole`, genre ID and
+  name).
+- **Clear/remove-field** events carry only the key (`party_id`, and the `Data`
+  type argument for platform links); the indexer already holds the old value.
+- Equal-value replacements and absent clears emit nothing; a first attachment,
+  including an explicitly empty value, emits.
+- One event per action. IDs use `ID`; enums are emitted as values, never
+  numeric codes. Sender, digest and checkpoint data stay in the envelope.
+
+There is no byte cap beyond Sui's 250 KiB per-event limit; every bound below
+is far under it.
 
 ## All declared events
 
-`party_id` and `admin_cap_id` retain object identity and authorizing capability.
-Counts retain transition context. Country/language codes are validated two-byte
-codes (at most ten ordered languages); short role/tag/genre names identify the
-single changed display value. Media quilt IDs are fixed-width references.
-Genre clear retains at most twenty removed relationship IDs, useful because
-those relationships are destroyed. Phantom `Data` identifies a platform slice.
-The legacy wrapper events remain inert; their declarations are unchanged.
-
-| Package | Event | Retained fields (declaration order) |
+| Package | Event | Fields (declaration order) |
 |---|---|---|
-| `lib/platform_link` | `PlatformLinkSetEvent<phantom Data>` | `parent_id`, `existed_before`, `exists_after` |
-| `lib/platform_link` | `PlatformLinkRemovedEvent<phantom Data>` | `parent_id`, `existed_before`, `exists_after` |
-| `party_cta` | `CtasSetEvent` | `party_id`, `admin_cap_id`, `existed_before`, `previous_count`, `count` |
-| `party_cta` | `CtasClearedEvent` | `party_id`, `admin_cap_id`, `previous_count` |
-| `party_genre` | `GenreAddedEvent` | `party_id`, `admin_cap_id`, `genre_id`, `genre_name`, `genre_count_before`, `genre_count_after`, `max_genres` |
-| `party_genre` | `GenreRemovedEvent` | `party_id`, `admin_cap_id`, `genre_id`, `genre_count_before`, `genre_count_after` |
-| `party_genre` | `GenresClearedEvent` | `party_id`, `admin_cap_id`, `genre_count_before`, `genre_count_after`, `genre_ids_before` |
-| `party_media` | `MediaSetEvent` | `party_id`, `admin_cap_id`, `existed_before`, `previous_quilt`, `quilt` |
-| `party_media` | `MediaClearedEvent` | `party_id`, `admin_cap_id`, `previous_quilt` |
-| `party_platform_link` | `LinkSetEvent<phantom Data>` | `party_id` |
-| `party_platform_link` | `LinkClearedEvent<phantom Data>` | `party_id` |
-| `party_profile` | `PartyProfileSetEvent` | `party_id`, `admin_cap_id`, `had_profile`, `previous_country`, `previous_languages`, `country`, `languages` |
-| `party_profile` | `PartyProfileClearedEvent` | `party_id`, `admin_cap_id`, `previous_country`, `previous_languages` |
-| `party_roles` | `RoleAddedEvent` | `party_id`, `admin_cap_id`, `role_kind`, `role_name`, `roles_count_before`, `roles_count_after` |
-| `party_roles` | `RoleRemovedEvent` | `party_id`, `admin_cap_id`, `role_kind`, `role_name`, `roles_count_before`, `roles_count_after` |
-| `party_roles` | `RolesClearedEvent` | `party_id`, `admin_cap_id`, `roles_count_before`, `roles_count_after` |
-| `party_tags` | `TagAddedEvent` | `party_id`, `admin_cap_id`, `tag`, `tag_count_before`, `tag_count_after` |
-| `party_tags` | `TagRemovedEvent` | `party_id`, `admin_cap_id`, `tag`, `tag_count_before`, `tag_count_after` |
-| `party_tags` | `TagsClearedEvent` | `party_id`, `admin_cap_id`, `tag_count_before`, `tag_count_after` |
+| `lib/platform_link` | `PlatformLinkSetEvent<Data>` | `parent_id: ID`, `data: Data` |
+| `lib/platform_link` | `PlatformLinkRemovedEvent<phantom Data>` | `parent_id: ID` |
+| `party_cta` | `CtasSetEvent` | `party_id: ID`, `ctas: vector<Cta>` |
+| `party_cta` | `CtasClearedEvent` | `party_id: ID` |
+| `party_genre` | `GenreAddedEvent` | `party_id: ID`, `genre_id: ID`, `genre_name: String` |
+| `party_genre` | `GenreRemovedEvent` | `party_id: ID`, `genre_id: ID` |
+| `party_genre` | `GenresClearedEvent` | `party_id: ID` |
+| `party_media` | `MediaSetEvent` | `party_id: ID`, `quilt: u256` |
+| `party_media` | `MediaClearedEvent` | `party_id: ID` |
+| `party_profile` | `PartyProfileSetEvent` | `party_id: ID`, `bio_short: String`, `bio_long: Option<String>`, `country: Option<CountryCode>`, `languages: vector<LanguageCode>` |
+| `party_profile` | `PartyProfileClearedEvent` | `party_id: ID` |
+| `party_roles` | `RoleAddedEvent` | `party_id: ID`, `role: ArtistRole` |
+| `party_roles` | `RoleRemovedEvent` | `party_id: ID`, `role: ArtistRole` |
+| `party_roles` | `RolesClearedEvent` | `party_id: ID` |
+| `party_tags` | `TagAddedEvent` | `party_id: ID`, `tag: String` |
+| `party_tags` | `TagRemovedEvent` | `party_id: ID`, `tag: String` |
+| `party_tags` | `TagsClearedEvent` | `party_id: ID` |
 
-Pure `party_music`, `party_social`, and `party_pro_link` payload packages declare
-and emit no events. `lib/platform_link` emits the authoritative platform events;
-`party_platform_link` retains its cap gate and does not emit duplicate events.
-There are 19 declarations: 17 active events and two inert compatibility types.
+`party_platform_link` declares no events: its writes delegate to
+`platform_link`, whose events carry the party's ID as `parent_id`. The pure
+payload packages `party_social`, `party_music` and `party_pro_link` declare
+and emit none. There are 17 declarations, all emitted.
 
-## Source-derived BCS payload bounds
+## Derived values
 
-These are serialized **payload bytes**, not total transaction/event-envelope
-sizes, gas measurements, or claims about gas savings. An address/u256 is 32
-bytes, u64 is 8, bool is 1; vector lengths use ULEB128, and Option has a one-byte
-presence prefix. Maximums use storage-validation bounds and reachable changed
-writes. Type tags are outside these payload sizes.
+- Set sizes and `has_*` flags follow from the add/remove/clear stream.
+- An `ArtistRole` display name is the fixed variant mapping in
+  `party_roles::role_name` (`Dj` → `DJ`); `Custom` carries its own name.
 
-| Event | Previous maximum | Current maximum | Reason |
-|---|---:|---:|---|
-| `CtasSetEvent` | 82,605 | 81 | Remove two ordered sets of 20 labels (60 B) and URLs (2,000 B) |
-| `CtasClearedEvent` | 41,334 | 72 | Remove the deleted content snapshot |
-| `PartyProfileSetEvent` | 17,129 | 135 | Remove two 300 B short and 8,192 B long bios; retain codes |
-| `PartyProfileClearedEvent` | 8,596 | 99 | Remove deleted bios; retain codes |
-| `GenreAddedEvent` | 1,419 | 185 | Replace 19+20 IDs with counts; retain 64 B name and changed ID |
-| `GenreRemovedEvent` | 1,346 | 112 | Replace 20+19 IDs with counts |
-| `GenresClearedEvent` | 706 | 721 | Retain <=20 removed IDs, replace empty result list with transition counts |
-| `RoleAddedEvent`, `RoleRemovedEvent` | 142 | 142 | Retain one <=60 B role name, kind, and counts |
-| `RolesClearedEvent` | 826 | 80 | Remove 12 names and kind list |
-| `TagAddedEvent`, `TagRemovedEvent` | 131 | 131 | Retain one <=50 B tag and counts |
-| `TagsClearedEvent` | 1,611 | 80 | Remove 30 tags |
-| `MediaSetEvent` | 129 | 129 | Two fixed-size quilt IDs |
-| `MediaClearedEvent` | 96 | 96 | Removed fixed-size quilt ID |
-| `PlatformLinkSetEvent<Data>` | `116 + ULEB(T) + T` | 34 | Remove duplicated type name (`T` UTF-8 bytes), lengths and two hashes |
-| `PlatformLinkRemovedEvent<Data>` | `75 + ULEB(T) + T` | 34 | Remove duplicated type name, length and hash |
-| Inert `LinkSetEvent<Data>`, `LinkClearedEvent<Data>` | 32 | 32 | Not emitted |
+## BCS payload bounds
 
-Platform previous formulas describe replacement/removal with present data;
-initial set uses an empty prior digest and is 32 bytes smaller. Generic `Data`
-had no module-level type-name bound. The new primitive also avoids event-only
-BCS serialization and hashing, while comparing the full value for change
-detection. Actual app/API/indexer/CLI source had no consumers of those hashes;
-SDK generated codecs and wire assertions require matching schema updates.
+Serialized payload bytes (type tags excluded). An `ID` or `u256` is 32 bytes;
+strings and vectors carry a ULEB128 length; `Option` has a one-byte prefix.
 
-CTA set bound: `81 + 4 + 2*20*((1+60)+(2+2000)) = 82,605`.
-Profile code context is at most `4 + (1+10*3) = 35` bytes per side.
-Tests serialize max-content and tiny/empty-content events to verify that text
-length no longer controls event payload size, and retain storage, authorization,
-no-op, optional/empty, relationship, and validation assertions.
+| Event | Maximum bytes | Derivation |
+|---|---:|---|
+| `PlatformLinkSetEvent<Data>` | 2,034 | `32 + BCS(Data)`; party payloads hold one string of ≤256 B (handle/id: 290) or ≤2,000 B (URL: `32 + 2 + 2000`) |
+| `PlatformLinkRemovedEvent<Data>` | 32 | parent ID |
+| `CtasSetEvent` | 41,293 | `32 + 1 + 20 × ((1 + 60) + (2 + 2000))`; 33 when empty |
+| `CtasClearedEvent` | 32 | party ID |
+| `GenreAddedEvent` | 129 | `64 + 1 + 64` (genre names ≤64 B) |
+| `GenreRemovedEvent` | 64 | two IDs |
+| `GenresClearedEvent` | 32 | party ID |
+| `MediaSetEvent` | 64 | ID + `u256` |
+| `MediaClearedEvent` | 32 | party ID |
+| `PartyProfileSetEvent` | 8,564 | `32 + (2 + 300) + (1 + 2 + 8192) + (1 + 1 + 2) + (1 + 10 × 3)` |
+| `PartyProfileClearedEvent` | 32 | party ID |
+| `RoleAddedEvent`, `RoleRemovedEvent` | 94 | `32 + 1` variant `+ 1 + 60` for `Custom`; 33 for canonical roles |
+| `RolesClearedEvent` | 32 | party ID |
+| `TagAddedEvent`, `TagRemovedEvent` | 83 | `32 + 1 + 50` |
+| `TagsClearedEvent` | 32 | party ID |
+
+Tests serialize the maximum-content events and assert these sizes.

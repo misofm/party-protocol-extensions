@@ -6,9 +6,8 @@ any object's `UID`. Protocol-agnostic by design: it knows nothing about
 platforms or consumers, so anything in the ecosystem can depend on it.
 Consumers never re-implement link storage — they define a `Data` payload type
 and get one independent link field per platform, keyed by type. Every actual
-change emits a typed, bounded event containing only the parent ID and existence
-transition. The event's phantom `Data` parameter carries the defining-package
-type identity without duplicating type-name bytes in the payload.
+change emits a typed event: a set carries the parent ID and the full `Data`
+payload, a removal the parent ID, so an indexer never re-reads the field.
 
 URLs are never stored: the client rebuilds the public URL from the `Data` it
 reads back, so a platform reshaping its URLs needs no on-chain change.
@@ -21,9 +20,8 @@ reads back, so a platform reshaping its URLs needs no on-chain change.
   the platform's native identifier(s) — a handle, id, or subdomain.
 - Exactly one link per `Data` type per `UID`; `set` replaces in place.
 - `set` emits `PlatformLinkSetEvent<Data>` for inserts and changed replacements;
-  equal replacements still write silently. `remove` and `clear` emit
-  `PlatformLinkRemovedEvent<Data>` only when a link was present. Events carry no
-  full payload bytes.
+  equal replacements are silent no-ops. `remove` and `clear` emit
+  `PlatformLinkRemovedEvent<Data>` only when a link was present.
 
 The module also owns the shared storage backstops so every payload package
 uses the same numbers:
@@ -49,9 +47,9 @@ consumer's concern (e.g. `party_platform_link` gates with `PartyAdminCap`).
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set<Data>(&mut uid, link)` | Store, replacing any existing link; emits a bounded set event | — |
-| `clear<Data>(&mut uid)` | Remove if present and emit a bounded removed event | — (no-op when absent) |
-| `remove<Data>(&mut uid)` | Remove and return the link; emits a bounded removed event | `ENoLink` (0) when absent |
+| `set<Data>(&mut uid, link)` | Store, replacing any existing link; emits a set event with the payload when it changes | — |
+| `clear<Data>(&mut uid)` | Remove if present and emit a removed event | — (no-op when absent) |
+| `remove<Data>(&mut uid)` | Remove and return the link; emits a removed event | `ENoLink` (0) when absent |
 | `exists_<Data>(&uid)` | Whether a link is stored | — |
 | `get<Data>(&uid)` | `Option<PlatformLink<Data>>` | — |
 | `borrow<Data>(&uid)` | `&PlatformLink<Data>` | `ENoLink` (0) when absent |
@@ -60,11 +58,13 @@ consumer's concern (e.g. `party_platform_link` gates with `PartyAdminCap`).
 
 | Event | When | Payload |
 |---|---|---|
-| `PlatformLinkSetEvent<Data>` | `set` on insert or a changed replacement | `parent_id`, `existed_before`, `exists_after` (34 BCS bytes); phantom `Data` identifies the slice |
-| `PlatformLinkRemovedEvent<Data>` | present `remove` or `clear` | `parent_id`, `existed_before`, `exists_after` (34 BCS bytes); phantom `Data` identifies the slice |
+| `PlatformLinkSetEvent<Data>` | `set` on insert or a changed replacement | `parent_id: ID`, `data: Data` (32 + BCS of `Data` bytes) |
+| `PlatformLinkRemovedEvent<phantom Data>` | present `remove` or `clear` | `parent_id: ID` (32 bytes); the `Data` type argument is the removed key |
 
-Absent `clear` is silent. The phantom event type identifies `Data`; no
-payload serialization, hashes, or duplicated type-name bytes are emitted.
+Absent `clear` and equal replacements are silent. The event type argument
+identifies the platform. Payload size is bounded by the `Data` type; the party
+payload packages cap each string at 256 bytes (identifiers) or 2000 bytes
+(URLs), far below Sui's 250 KiB per-event limit.
 
 ## Errors
 
@@ -90,5 +90,5 @@ or floating dependencies.
   rendering.
 - `PlatformLinkKey<Data>` types are namespaced by the defining package, so
   identically-named payloads in different packages never collide.
-- Index events by their phantom-typed event streams. Re-read the dynamic field
-  when the full payload is needed. Events identify changes without copying `Data`.
+- Index events by their typed event streams: `PlatformLinkSetEvent<Data>`
+  carries the new payload, so the field never needs a re-read.

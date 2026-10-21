@@ -74,127 +74,43 @@ fun fresh_id(ctx: &mut TxContext): ID {
     id
 }
 
-fun assert_added_events(id1: ID, id2: ID, id3: ID, party_id: address, admin_cap_id: address) {
-    let added = event::events_by_type<pg::GenreAddedEvent>();
-    assert_eq!(added.length(), 3);
-    let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-        pg::added_event_fields(&added[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, id1.to_address());
-    assert_eq!(event_name, b"HIP_HOP");
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
-    assert_eq!(max, MAX_GENRES);
-
-    let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-        pg::added_event_fields(&added[1]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, id2.to_address());
-    assert_eq!(event_name, b"AMBIENT");
-    assert_eq!(before, 1);
-    assert_eq!(after, 2);
-    assert_eq!(max, MAX_GENRES);
-
-    let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-        pg::added_event_fields(&added[2]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, id3.to_address());
-    assert_eq!(event_name, b"TECHNO");
-    assert_eq!(before, 2);
-    assert_eq!(after, 3);
-    assert_eq!(max, MAX_GENRES);
-}
-
-fun assert_middle_removed_event(_id1: ID, id2: ID, _id3: ID, party_id: address, admin_cap_id: address) {
-    let removed = event::events_by_type<pg::GenreRemovedEvent>();
-    assert_eq!(removed.length(), 1);
-    let (event_party_id, event_cap_id, event_genre_id, before, after) =
-        pg::removed_event_fields(&removed[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, id2.to_address());
-    assert_eq!(before, 3);
-    assert_eq!(after, 2);
-}
-
-fun assert_final_removed_event(id3: ID, party_id: address, admin_cap_id: address) {
-    let removed = event::events_by_type<pg::GenreRemovedEvent>();
-    assert_eq!(removed.length(), 3);
-    let (event_party_id, event_cap_id, event_genre_id, before, after) =
-        pg::removed_event_fields(&removed[2]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, id3.to_address());
-    assert_eq!(before, 1);
-    assert_eq!(after, 0);
-}
-
 fun assert_added_event_at(
     event_index: u64,
     expected_count: u64,
     genre_id: ID,
     genre_name: vector<u8>,
-    expected_before: vector<address>,
-    expected_after: vector<address>,
-    party_id: address,
-    admin_cap_id: address,
+    party_id: ID,
 ) {
     let added = event::events_by_type<pg::GenreAddedEvent>();
     assert_eq!(added.length(), expected_count);
-    let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-        pg::added_event_fields(&added[event_index]);
+    let (event_party_id, event_genre_id, event_name) = pg::added_event_fields(&added[event_index]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(event_genre_id, genre_id.to_address());
-    assert_eq!(event_name, genre_name);
-    assert_eq!(before, expected_before.length());
-    assert_eq!(after, expected_after.length());
-    assert_eq!(max, MAX_GENRES);
+    assert_eq!(event_genre_id, genre_id);
+    assert_eq!(event_name, genre_name.to_string());
 }
 
-fun assert_cleared_event_at(
+fun assert_removed_event_at(
     event_index: u64,
     expected_count: u64,
-    expected_before: vector<address>,
-    party_id: address,
-    admin_cap_id: address,
+    genre_id: ID,
+    party_id: ID,
 ) {
-    let cleared = event::events_by_type<pg::GenresClearedEvent>();
-    assert_eq!(cleared.length(), expected_count);
-    let (event_party_id, event_cap_id, before, after, removed_ids) =
-        pg::cleared_event_fields(&cleared[event_index]);
-    assert_eq!(removed_ids, expected_before);
+    let removed = event::events_by_type<pg::GenreRemovedEvent>();
+    assert_eq!(removed.length(), expected_count);
+    let (event_party_id, event_genre_id) = pg::removed_event_fields(&removed[event_index]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(before, expected_before.length());
-    assert_eq!(after, 0);
+    assert_eq!(event_genre_id, genre_id);
 }
 
-fun assert_full_add_events(ids: &vector<ID>, party_id: address, admin_cap_id: address) {
-    let added = event::events_by_type<pg::GenreAddedEvent>();
-    assert_eq!(added.length(), MAX_GENRES);
-    let mut expected_before = vector[];
+fun assert_cleared_event_at(event_index: u64, expected_count: u64, party_id: ID) {
+    let cleared = event::events_by_type<pg::GenresClearedEvent>();
+    assert_eq!(cleared.length(), expected_count);
+    assert_eq!(pg::cleared_event_fields(&cleared[event_index]), party_id);
+}
+
+fun assert_full_add_events(ids: &vector<ID>, party_id: ID) {
     MAX_GENRES.do!(|i| {
-        let genre_id = *ids.borrow(i);
-        let expected_name = vector[((65 + i) as u8)];
-        let expected_after = {
-            let mut after = expected_before;
-            after.push_back(genre_id.to_address());
-            after
-        };
-        let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-            pg::added_event_fields(&added[i]);
-        assert_eq!(event_party_id, party_id);
-        assert_eq!(event_cap_id, admin_cap_id);
-        assert_eq!(event_genre_id, genre_id.to_address());
-        assert_eq!(event_name, expected_name);
-        assert_eq!(before, expected_before.length());
-        assert_eq!(after, expected_after.length());
-        assert_eq!(max, MAX_GENRES);
-        expected_before.push_back(genre_id.to_address());
+        assert_added_event_at(i, MAX_GENRES, ids[i], vector[((65 + i) as u8)], party_id);
     });
 }
 
@@ -225,15 +141,16 @@ fun add_remove_and_query() {
     let genre2 = scenario.take_immutable_by_id<Genre>(id2);
     let genre3 = scenario.take_immutable_by_id<Genre>(id3);
     let (mut p, cap) = new_party(scenario.ctx());
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     assert!(!pg::has_genres(&p));
     pg::add_genre(&mut p, &cap, &genre1);
     pg::add_genre(&mut p, &cap, &genre2);
     pg::add_genre(&mut p, &cap, &genre3);
 
-    assert_added_events(id1, id2, id3, party_id, admin_cap_id);
+    assert_added_event_at(0, 3, id1, b"HIP_HOP", party_id);
+    assert_added_event_at(1, 3, id2, b"AMBIENT", party_id);
+    assert_added_event_at(2, 3, id3, b"TECHNO", party_id);
 
     assert!(pg::has_genres(&p));
     assert!(pg::has_genre(&p, id1));
@@ -246,78 +163,37 @@ fun add_remove_and_query() {
     assert!(!pg::has_genre(&p, id2));
     assert_eq!(pg::genres(&p).length(), 2);
 
-    assert_middle_removed_event(id1, id2, id3, party_id, admin_cap_id);
+    assert_removed_event_at(0, 1, id2, party_id);
 
     // Removing the remaining entries eventually reclaims the field — no empty
-    // set lingers, and the final removal snapshot is empty afterwards.
+    // set lingers.
     pg::remove_genre(&mut p, &cap, id1);
     pg::remove_genre(&mut p, &cap, id3);
     assert!(!pg::has_genres(&p));
-    assert_final_removed_event(id3, party_id, admin_cap_id);
+    assert_removed_event_at(1, 3, id1, party_id);
+    assert_removed_event_at(2, 3, id3, party_id);
 
-    // Re-adding after field deletion starts a fresh ordered snapshot.
+    // Re-adding after field deletion emits fresh add events.
     pg::add_genre(&mut p, &cap, &genre1);
-    assert_added_event_at(
-        3,
-        4,
-        id1,
-        b"HIP_HOP",
-        vector[],
-        vector[id1.to_address()],
-        party_id,
-        admin_cap_id,
-    );
+    assert_added_event_at(3, 4, id1, b"HIP_HOP", party_id);
     pg::add_genre(&mut p, &cap, &genre2);
-    assert_added_event_at(
-        4,
-        5,
-        id2,
-        b"AMBIENT",
-        vector[id1.to_address()],
-        vector[id1.to_address(), id2.to_address()],
-        party_id,
-        admin_cap_id,
-    );
+    assert_added_event_at(4, 5, id2, b"AMBIENT", party_id);
     pg::add_genre(&mut p, &cap, &genre3);
-    assert_added_event_at(
-        5,
-        6,
-        id3,
-        b"TECHNO",
-        vector[id1.to_address(), id2.to_address()],
-        vector[id1.to_address(), id2.to_address(), id3.to_address()],
-        party_id,
-        admin_cap_id,
-    );
+    assert_added_event_at(5, 6, id3, b"TECHNO", party_id);
 
     // Views over a populated set are silent and preserve complete order.
     assert_populated_views_silent(&p, vector[id1, id2, id3]);
 
-    // A populated clear emits exactly one event with the complete prior order.
+    // A populated clear emits exactly one event.
     pg::clear_genres(&mut p, &cap);
     assert!(!pg::has_genres(&p));
-    assert_cleared_event_at(
-        0,
-        1,
-        vector[id1.to_address(), id2.to_address(), id3.to_address()],
-        party_id,
-        admin_cap_id,
-    );
+    assert_cleared_event_at(0, 1, party_id);
 
-    // Re-adding after clear emits one complete add event from an empty set.
+    // Re-adding after clear emits one add event.
     pg::add_genre(&mut p, &cap, &genre1);
-    assert_added_event_at(
-        6,
-        7,
-        id1,
-        b"HIP_HOP",
-        vector[],
-        vector[id1.to_address()],
-        party_id,
-        admin_cap_id,
-    );
+    assert_added_event_at(6, 7, id1, b"HIP_HOP", party_id);
     pg::clear_genres(&mut p, &cap);
-    assert_cleared_event_at(1, 2, vector[id1.to_address()], party_id, admin_cap_id);
+    assert_cleared_event_at(1, 2, party_id);
 
     // Clearing an absent set (including repeatedly) is authorized but silent.
     let events_before = event::num_events();
@@ -361,15 +237,10 @@ fun shared_party_genre_workflow() {
     pg::add_genre(&mut p, &cap, &genre);
     let events = event::events_by_type<pg::GenreAddedEvent>();
     assert_eq!(events.length(), 1);
-    let (event_party_id, event_cap_id, event_genre_id, event_name, before, after, max) =
-        pg::added_event_fields(&events[0]);
-    assert_eq!(event_party_id, object::id(&p).to_address());
-    assert_eq!(event_cap_id, object::id(&cap).to_address());
-    assert_eq!(event_genre_id, genre_id.to_address());
-    assert_eq!(event_name, b"HOUSE");
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
-    assert_eq!(max, MAX_GENRES);
+    let (event_party_id, event_genre_id, event_name) = pg::added_event_fields(&events[0]);
+    assert_eq!(event_party_id, object::id(&p));
+    assert_eq!(event_genre_id, genre_id);
+    assert_eq!(event_name, b"HOUSE".to_string());
     ts::return_immutable(genre);
     ts::return_shared(p);
     scenario.return_to_sender(cap);
@@ -464,15 +335,14 @@ fun rejects_over_max() {
 
     scenario.next_tx(CREATOR);
     let (mut p, cap) = new_party(scenario.ctx());
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     MAX_GENRES.do!(|i| {
         let genre = scenario.take_immutable_by_id<Genre>(*ids.borrow(i));
         pg::add_genre(&mut p, &cap, &genre);
         ts::return_immutable(genre);
     });
     assert_eq!(pg::genres(&p).length(), MAX_GENRES);
-    assert_full_add_events(&ids, party_id, admin_cap_id);
+    assert_full_add_events(&ids, party_id);
     let last = scenario.take_immutable_by_id<Genre>(*ids.borrow(MAX_GENRES));
     pg::add_genre(&mut p, &cap, &last); // the (MAX_GENRES + 1)-th aborts
     abort

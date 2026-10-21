@@ -183,11 +183,10 @@ fun add_role_with_wrong_cap_on_full_set_aborts() {
 }
 
 #[test]
-fun event_role_kind_name_mapping_and_custom_identity() {
+fun events_carry_role_values_and_custom_identity() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     let role_values = vector[
         roles::artist(),
         roles::producer(),
@@ -199,18 +198,6 @@ fun event_role_kind_name_mapping_and_custom_identity() {
         roles::collective(),
         roles::custom(b"Artist".to_string()),
     ];
-    let expected_kinds = vector[0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8];
-    let expected_names = vector[
-        b"Artist",
-        b"Producer",
-        b"DJ",
-        b"Composer",
-        b"Songwriter",
-        b"Band",
-        b"Label",
-        b"Collective",
-        b"Artist",
-    ];
     9u64.do!(|i| roles::add_role(&mut p, &cap, *role_values.borrow(i)));
 
     assert_eq!(roles::roles(&p).length(), 9);
@@ -220,14 +207,9 @@ fun event_role_kind_name_mapping_and_custom_identity() {
     let added = event::events_by_type<roles::RoleAddedEvent>();
     assert_eq!(added.length(), 9);
     9u64.do!(|i| {
-        let (event_party_id, event_cap_id, kind, name, before, after) =
-            roles::added_event_fields(&added[i]);
+        let (event_party_id, role) = roles::added_event_fields(&added[i]);
         assert_eq!(event_party_id, party_id);
-        assert_eq!(event_cap_id, admin_cap_id);
-        assert_eq!(kind, *expected_kinds.borrow(i));
-        assert_eq!(name, *expected_names.borrow(i));
-        assert_eq!(before, i);
-        assert_eq!(after, i + 1);
+        assert_eq!(role, role_values[i]);
     });
 
     destroy(p);
@@ -235,11 +217,10 @@ fun event_role_kind_name_mapping_and_custom_identity() {
 }
 
 #[test]
-fun middle_and_final_remove_events_snapshot_counts() {
+fun middle_and_final_remove_events_carry_roles() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     roles::add_role(&mut p, &cap, roles::artist());
     roles::add_role(&mut p, &cap, roles::producer());
     roles::add_role(&mut p, &cap, roles::dj());
@@ -247,35 +228,27 @@ fun middle_and_final_remove_events_snapshot_counts() {
     roles::remove_role(&mut p, &cap, roles::producer());
     let removed = event::events_by_type<roles::RoleRemovedEvent>();
     assert_eq!(removed.length(), 1);
-    let (event_party_id, event_cap_id, kind, name, before, after) =
-        roles::removed_event_fields(&removed[0]);
+    let (event_party_id, role) = roles::removed_event_fields(&removed[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(kind, 1u8);
-    assert_eq!(name, b"Producer");
-    assert_eq!(before, 3);
-    assert_eq!(after, 2);
+    assert_eq!(role, roles::producer());
 
     roles::remove_role(&mut p, &cap, roles::artist());
     roles::remove_role(&mut p, &cap, roles::dj());
     assert!(!roles::has_roles(&p));
     let removed = event::events_by_type<roles::RoleRemovedEvent>();
-    let (_, _, kind, name, before, after) = roles::removed_event_fields(&removed[2]);
-    assert_eq!(kind, 2u8);
-    assert_eq!(name, b"DJ");
-    assert_eq!(before, 1);
-    assert_eq!(after, 0);
+    let (event_party_id, role) = roles::removed_event_fields(&removed[2]);
+    assert_eq!(event_party_id, party_id);
+    assert_eq!(role, roles::dj());
 
     destroy(p);
     destroy(cap);
 }
 
 #[test]
-fun clear_twelve_max_custom_names_has_constant_size() {
+fun clear_twelve_max_custom_names_emits_party_id() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     12u64.do!(|i| {
         let name = bytes_of_len(60, (65 + i) as u8);
         roles::add_role(&mut p, &cap, roles::custom(name.to_string()));
@@ -284,13 +257,8 @@ fun clear_twelve_max_custom_names_has_constant_size() {
 
     let cleared = event::events_by_type<roles::RolesClearedEvent>();
     assert_eq!(cleared.length(), 1);
-    assert_eq!(bcs::to_bytes(&cleared[0]).length(), 80);
-    let (event_party_id, event_cap_id, before, after) =
-        roles::cleared_event_fields(&cleared[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(before, 12);
-    assert_eq!(after, 0);
+    assert_eq!(bcs::to_bytes(&cleared[0]).length(), 32);
+    assert_eq!(roles::cleared_event_fields(&cleared[0]), party_id);
     assert!(!roles::has_roles(&p));
 
     destroy(p);
@@ -298,23 +266,24 @@ fun clear_twelve_max_custom_names_has_constant_size() {
 }
 
 #[test]
-fun multibyte_sixty_byte_name_is_bounded_and_event_is_142_bytes() {
+fun multibyte_sixty_byte_name_is_bounded_and_event_is_94_bytes() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
     let name = multibyte_bytes();
     roles::add_role(&mut p, &cap, roles::custom(name.to_string()));
     let added = event::events_by_type<roles::RoleAddedEvent>();
     assert_eq!(added.length(), 1);
-    assert_eq!(bcs::to_bytes(&added[0]).length(), 142);
-    let (_, _, kind, event_name, before, after) = roles::added_event_fields(&added[0]);
-    assert_eq!(kind, 8u8);
-    assert_eq!(event_name, name);
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
+    // 32 (ID) + 1 (variant) + 1 (len) + 60 (name).
+    assert_eq!(bcs::to_bytes(&added[0]).length(), 94);
+    let (_, role) = roles::added_event_fields(&added[0]);
+    assert_eq!(role, roles::custom(name.to_string()));
+    assert_eq!(role.name(), name.to_string());
 
     roles::remove_role(&mut p, &cap, roles::custom(name.to_string()));
     let removed = event::events_by_type<roles::RoleRemovedEvent>();
-    assert_eq!(bcs::to_bytes(&removed[0]).length(), 142);
+    assert_eq!(bcs::to_bytes(&removed[0]).length(), 94);
+    let (_, role) = roles::removed_event_fields(&removed[0]);
+    assert_eq!(role, roles::custom(name.to_string()));
     assert!(!roles::has_roles(&p));
     destroy(p);
     destroy(cap);
@@ -355,30 +324,22 @@ fun constructors_and_views_are_silent() {
 }
 
 #[test]
-fun clear_repeated_and_readd_events_start_from_zero() {
+fun clear_repeated_is_silent_and_readd_emits() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     roles::add_role(&mut p, &cap, roles::artist());
     roles::clear_roles(&mut p, &cap);
     roles::clear_roles(&mut p, &cap);
     roles::add_role(&mut p, &cap, roles::custom(b"Readded".to_string()));
     let added = event::events_by_type<roles::RoleAddedEvent>();
     assert_eq!(added.length(), 2);
-    let (_, _, kind, name, before, after) = roles::added_event_fields(&added[1]);
-    assert_eq!(kind, 8u8);
-    assert_eq!(name, b"Readded");
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
+    let (event_party_id, role) = roles::added_event_fields(&added[1]);
+    assert_eq!(event_party_id, party_id);
+    assert_eq!(role, roles::custom(b"Readded".to_string()));
     let cleared = event::events_by_type<roles::RolesClearedEvent>();
     assert_eq!(cleared.length(), 1);
-    let (event_party_id, event_cap_id, before, after) =
-        roles::cleared_event_fields(&cleared[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(before, 1);
-    assert_eq!(after, 0);
+    assert_eq!(roles::cleared_event_fields(&cleared[0]), party_id);
     destroy(p);
     destroy(cap);
 }

@@ -22,11 +22,11 @@ fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
 fun insert_different_and_equal_replace_events() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let parent_id = object::id(&p).to_address();
+    let parent_id = object::id(&p);
     let first = social::x(b"first".to_string());
     let second = social::x(b"second".to_string());
 
-    // Absent clear, absent view, and all legacy streams are silent.
+    // Absent clear and absent view are silent.
     let before = event::num_events();
     links::clear_link<XData>(&mut p, &cap);
     assert_eq!(event::num_events(), before);
@@ -35,35 +35,29 @@ fun insert_different_and_equal_replace_events() {
     assert_eq!(event::num_events(), before);
     assert_eq!(event::events_by_type<primitive::PlatformLinkSetEvent<XData>>().length(), 0);
     assert_eq!(event::events_by_type<primitive::PlatformLinkRemovedEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
 
     links::set_link(&mut p, &cap, first);
     assert_eq!(event::num_events(), before + 1);
     let sets = event::events_by_type<primitive::PlatformLinkSetEvent<XData>>();
     assert_eq!(sets.length(), 1);
-    assert_eq!(primitive::set_event_parent_id(&sets[0]), parent_id);
-    assert!(!primitive::set_event_existed_before(&sets[0]));
-    assert!(primitive::set_event_exists_after(&sets[0]));
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
+    let (event_parent_id, event_data) = primitive::set_event_fields(&sets[0]);
+    assert_eq!(event_parent_id, parent_id);
+    assert_eq!(event_data.handle(), b"first".to_string());
 
     links::set_link(&mut p, &cap, second);
     assert_eq!(event::num_events(), before + 2);
     let sets = event::events_by_type<primitive::PlatformLinkSetEvent<XData>>();
     assert_eq!(sets.length(), 2);
-    assert_eq!(primitive::set_event_parent_id(&sets[1]), parent_id);
-    assert!(primitive::set_event_existed_before(&sets[1]));
-    assert!(primitive::set_event_exists_after(&sets[1]));
+    let (event_parent_id, event_data) = primitive::set_event_fields(&sets[1]);
+    assert_eq!(event_parent_id, parent_id);
+    assert_eq!(event_data.handle(), b"second".to_string());
 
     links::set_link(&mut p, &cap, social::x(b"second".to_string()));
-    // Equal replacement still writes the complete value but emits no event.
+    // Equal replacement is a no-op and emits nothing.
     assert_eq!(event::num_events(), before + 2);
     let sets = event::events_by_type<primitive::PlatformLinkSetEvent<XData>>();
     assert_eq!(sets.length(), 2);
     assert_eq!(links::link<XData>(&p).destroy_some().data().handle(), b"second".to_string());
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
 
     links::clear_link<XData>(&mut p, &cap);
     destroy(p);

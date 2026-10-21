@@ -25,8 +25,7 @@ fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
 fun set_read_replace_clear() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     assert!(!cta::has_ctas(&p));
     assert!(cta::ctas(&p).is_empty());
@@ -38,18 +37,10 @@ fun set_read_replace_clear() {
 
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
-    let (
-        event_party_id,
-        event_cap_id,
-        existed_before,
-        previous_count,
-        count,
-        ) = cta::set_event_fields(&set_events[0]);
+    let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!existed_before);
-    assert_eq!(previous_count, 0);
-    assert_eq!(count, 2);
+    assert_eq!(event_ctas, cta::ctas(&p));
+    assert_eq!(event_ctas.length(), 2);
 
     assert!(cta::has_ctas(&p));
     let list = cta::ctas(&p);
@@ -65,29 +56,18 @@ fun set_read_replace_clear() {
     ]);
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 2);
-    let (
-        event_party_id,
-        event_cap_id,
-        existed_before,
-        previous_count,
-        count,
-        ) = cta::set_event_fields(&set_events[1]);
+    let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[1]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(existed_before);
-    assert_eq!(previous_count, 2);
-    assert_eq!(count, 1);
+    assert_eq!(event_ctas.length(), 1);
+    assert_eq!(event_ctas[0].label(), b"Newsletter".to_string());
+    assert_eq!(event_ctas[0].url(), b"https://substack.com/artist".to_string());
     assert_eq!(cta::ctas(&p).length(), 1);
     assert_eq!(cta::ctas(&p)[0].label(), b"Newsletter".to_string());
 
     cta::clear_ctas(&mut p, &cap);
     let cleared_events = event::events_by_type<cta::CtasClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
-    let (event_party_id, event_cap_id, previous_count) =
-        cta::cleared_event_fields(&cleared_events[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(previous_count, 1);
+    assert_eq!(cta::cleared_event_fields(&cleared_events[0]), party_id);
     assert!(!cta::has_ctas(&p));
     cta::clear_ctas(&mut p, &cap); // no-op
     assert_eq!(event::events_by_type<cta::CtasClearedEvent>().length(), 1);
@@ -123,40 +103,31 @@ fun shared_party_cta_workflow() {
 fun stored_empty_and_identical_replacement_preserve_event_semantics() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     // An empty vector is still an attached list and emits a set event.
     cta::set_ctas(&mut p, &cap, vector[]);
     assert!(cta::has_ctas(&p));
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
-    let (event_party_id, event_cap_id, existed_before, previous_count, count) =
-        cta::set_event_fields(&set_events[0]);
+    let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!existed_before);
-    assert_eq!(previous_count, 0);
-    assert_eq!(count, 0);
-    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 81);
+    assert!(event_ctas.is_empty());
+    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 33);
 
-    // Replacing an attached empty list with an identical empty list still
-    // performs the write but emits no redundant replacement event.
+    // Replacing an attached empty list with an identical empty list is a
+    // no-op and emits nothing.
     cta::set_ctas(&mut p, &cap, vector[]);
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
     assert!(cta::has_ctas(&p));
 
-    // Clearing the stored empty list emits a clear event with count zero.
+    // Clearing the stored empty list emits a clear event.
     cta::clear_ctas(&mut p, &cap);
     assert!(!cta::has_ctas(&p));
     let cleared_events = event::events_by_type<cta::CtasClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
-    let (event_party_id, event_cap_id, previous_count) =
-        cta::cleared_event_fields(&cleared_events[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(previous_count, 0);
+    assert_eq!(cta::cleared_event_fields(&cleared_events[0]), party_id);
 
     // A second clear is absent-state no-op: it must not emit.
     cta::clear_ctas(&mut p, &cap);
@@ -169,8 +140,7 @@ fun stored_empty_and_identical_replacement_preserve_event_semantics() {
 fun storage_preserves_order_duplicates_and_multibyte_values() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     let first_label = vector[0xC3u8, 0xA9u8].to_string(); // é
     let first_url = vector[0x68u8, 0x74u8, 0x74u8, 0x70u8, 0x73u8, 0x3Au8,
         0x2Fu8, 0x2Fu8, 0xE2u8, 0x98u8, 0x83u8].to_string(); // https://☃
@@ -184,13 +154,10 @@ fun storage_preserves_order_duplicates_and_multibyte_values() {
 
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
-    let (event_party_id, event_cap_id, existed_before, previous_count, count) =
-        cta::set_event_fields(&set_events[0]);
+    let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!existed_before);
-    assert_eq!(previous_count, 0);
-    assert_eq!(count, 3);
+    assert_eq!(event_ctas, cta::ctas(&p));
+    assert_eq!(event_ctas[1].url(), first_url);
     let list = cta::ctas(&p);
     assert_eq!(list.length(), 3);
     assert_eq!(list[0].label(), vector[0xC3u8, 0xA9u8].to_string());
@@ -208,26 +175,21 @@ fun max_ctas(): vector<cta::Cta> {
 }
 
 #[test]
-fun maximum_content_has_constant_size_events() {
+fun maximum_content_is_emitted_in_full() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     cta::set_ctas(&mut p, &cap, max_ctas());
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
-    let (event_party_id, event_cap_id, existed_before, previous_count, count) =
-        cta::set_event_fields(&set_events[0]);
+    let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!existed_before);
-    assert_eq!(previous_count, 0);
-    assert_eq!(count, 20);
-    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 81);
+    assert_eq!(event_ctas, max_ctas());
+    // 32 (ID) + 1 (len) + 20 * ((1 + 60) + (2 + 2000)).
+    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 41293);
 
-    // Replacing with an identical maximum list keeps the complete value but
-    // does not emit a redundant replacement event.
+    // Replacing with an identical maximum list is a no-op and emits nothing.
     cta::set_ctas(&mut p, &cap, max_ctas());
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
@@ -235,12 +197,8 @@ fun maximum_content_has_constant_size_events() {
     cta::clear_ctas(&mut p, &cap);
     let cleared_events = event::events_by_type<cta::CtasClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
-    let (event_party_id, event_cap_id, previous_count) =
-        cta::cleared_event_fields(&cleared_events[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(previous_count, 20);
-    assert_eq!(std::bcs::to_bytes(&cleared_events[0]).length(), 72);
+    assert_eq!(cta::cleared_event_fields(&cleared_events[0]), party_id);
+    assert_eq!(std::bcs::to_bytes(&cleared_events[0]).length(), 32);
     destroy(p);
     destroy(cap);
 }
@@ -261,7 +219,10 @@ fun equal_cta_list_is_silent_but_component_change_emits() {
     cta::set_ctas(&mut p, &cap, vector[
         cta::new_cta(b"Listen".to_string(), b"https://two.example".to_string()),
     ]);
-    assert_eq!(event::events_by_type<cta::CtasSetEvent>().length(), 2);
+    let set_events = event::events_by_type<cta::CtasSetEvent>();
+    assert_eq!(set_events.length(), 2);
+    let (_, event_ctas) = cta::set_event_fields(&set_events[1]);
+    assert_eq!(event_ctas[0].url(), b"https://two.example".to_string());
     assert_eq!(cta::ctas(&p)[0].url(), b"https://two.example".to_string());
     destroy(p);
     destroy(cap);

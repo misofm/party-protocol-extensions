@@ -47,9 +47,9 @@ All writes require `&PartyAdminCap` for the exact party and go through
 
 | Event | When | Payload |
 |---|---|---|
-| `GenreAddedEvent` | A genre is tagged (`add_genre`) | `party_id`, `admin_cap_id`, `genre_id`, `genre_name`, `genre_count_before`, `genre_count_after`, `max_genres` |
-| `GenreRemovedEvent` | A genre is removed (`remove_genre`) | `party_id`, `admin_cap_id`, `genre_id`, `genre_count_before`, `genre_count_after` |
-| `GenresClearedEvent` | The whole set is removed (`clear_genres` on an existing set) | `party_id`, `admin_cap_id`, `genre_count_before`, `genre_count_after`, `genre_ids_before` |
+| `GenreAddedEvent` | A genre is tagged (`add_genre`) | `party_id: ID`, `genre_id: ID`, `genre_name: String` (at most 64 + 65 = 129 bytes) |
+| `GenreRemovedEvent` | A genre is removed (`remove_genre`) | `party_id: ID`, `genre_id: ID` (64 bytes) |
+| `GenresClearedEvent` | The whole set is removed (`clear_genres` on an existing set) | `party_id: ID` (32 bytes) |
 
 ## Errors
 
@@ -88,9 +88,9 @@ All are exact Git pins; this manifest has no local-path dependencies.
   id resolves to a real entry. The ids are the vocabulary's own, the same ones
   `release_genre` tags releases with, so party genres join cleanly against
   release metadata.
-- **Events are change signals.** Add/remove carry the changed genre ID and
-  counts; add also carries its short display name. Clear retains the removed
-  relationship IDs (at most 20). Re-read `genres()` for current state.
+- **Events are sufficient for indexing.** Add carries the genre ID and display
+  name, remove the genre ID, clear the party ID (drop the whole set). An
+  indexer maintains the ordered set from events alone.
 - **No ranking.** `genres()` returns insertion order (a `typed_set`
   guarantee); any notion of a "primary genre" — e.g. first element — is a
   client convention, not protocol state.

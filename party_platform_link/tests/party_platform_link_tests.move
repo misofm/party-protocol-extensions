@@ -26,8 +26,8 @@ fun x_and_instagram_events_keep_distinct_parties_and_types() {
     let ctx = &mut tx_context::dummy();
     let (mut x_party, x_cap) = new_party(ctx);
     let (mut instagram_party, instagram_cap) = new_party(ctx);
-    let x_parent_id = object::id(&x_party).to_address();
-    let instagram_parent_id = object::id(&instagram_party).to_address();
+    let x_parent_id = object::id(&x_party);
+    let instagram_parent_id = object::id(&instagram_party);
     assert!(x_parent_id != instagram_parent_id);
 
     let x_link = social::x(b"miso".to_string());
@@ -40,17 +40,13 @@ fun x_and_instagram_events_keep_distinct_parties_and_types() {
     let instagram_events = event::events_by_type<primitive::PlatformLinkSetEvent<InstagramData>>();
     assert_eq!(x_events.length(), 1);
     assert_eq!(instagram_events.length(), 1);
-    assert_eq!(primitive::set_event_parent_id(&x_events[0]), x_parent_id);
-    assert_eq!(primitive::set_event_parent_id(&instagram_events[0]), instagram_parent_id);
-    assert!(!primitive::set_event_existed_before(&x_events[0]));
-    assert!(!primitive::set_event_existed_before(&instagram_events[0]));
-    assert!(primitive::set_event_exists_after(&x_events[0]));
-    assert!(primitive::set_event_exists_after(&instagram_events[0]));
+    let (event_parent_id, event_data) = primitive::set_event_fields(&x_events[0]);
+    assert_eq!(event_parent_id, x_parent_id);
+    assert_eq!(event_data.handle(), b"miso".to_string());
+    let (event_parent_id, event_data) = primitive::set_event_fields(&instagram_events[0]);
+    assert_eq!(event_parent_id, instagram_parent_id);
+    assert_eq!(event_data.handle(), b"miso.fm".to_string());
 
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkSetEvent<InstagramData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<InstagramData>>().length(), 0);
 
     links::clear_link<XData>(&mut x_party, &x_cap);
     links::clear_link<InstagramData>(&mut instagram_party, &instagram_cap);
@@ -58,14 +54,8 @@ fun x_and_instagram_events_keep_distinct_parties_and_types() {
     let instagram_removed = event::events_by_type<primitive::PlatformLinkRemovedEvent<InstagramData>>();
     assert_eq!(x_removed.length(), 1);
     assert_eq!(instagram_removed.length(), 1);
-    assert_eq!(primitive::removed_event_parent_id(&x_removed[0]), x_parent_id);
-    assert_eq!(primitive::removed_event_parent_id(&instagram_removed[0]), instagram_parent_id);
-    assert!(primitive::removed_event_existed_before(&x_removed[0]));
-    assert!(primitive::removed_event_existed_before(&instagram_removed[0]));
-    assert!(!primitive::removed_event_exists_after(&x_removed[0]));
-    assert!(!primitive::removed_event_exists_after(&instagram_removed[0]));
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
+    assert_eq!(primitive::removed_event_fields(&x_removed[0]), x_parent_id);
+    assert_eq!(primitive::removed_event_fields(&instagram_removed[0]), instagram_parent_id);
 
     destroy(x_party);
     destroy(x_cap);
@@ -77,7 +67,7 @@ fun x_and_instagram_events_keep_distinct_parties_and_types() {
 fun shared_party_cap_holder_and_reader() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    let parent_id = object::id(&p).to_address();
+    let parent_id = object::id(&p);
     party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
@@ -87,10 +77,9 @@ fun shared_party_cap_holder_and_reader() {
     links::set_link(&mut p, &cap, social::x(b"miso".to_string()));
     let set_events = event::events_by_type<primitive::PlatformLinkSetEvent<XData>>();
     assert_eq!(set_events.length(), 1);
-    assert_eq!(primitive::set_event_parent_id(&set_events[0]), parent_id);
-    assert!(!primitive::set_event_existed_before(&set_events[0]));
-    assert!(primitive::set_event_exists_after(&set_events[0]));
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
+    let (event_parent_id, event_data) = primitive::set_event_fields(&set_events[0]);
+    assert_eq!(event_parent_id, parent_id);
+    assert_eq!(event_data.handle(), b"miso".to_string());
     ts::return_shared(p);
     scenario.return_to_sender(cap);
 
@@ -102,8 +91,6 @@ fun shared_party_cap_holder_and_reader() {
     assert_eq!(event::num_events(), before);
     assert_eq!(event::events_by_type<primitive::PlatformLinkSetEvent<XData>>().length(), 0);
     assert_eq!(event::events_by_type<primitive::PlatformLinkRemovedEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkSetEvent<XData>>().length(), 0);
-    assert_eq!(event::events_by_type<links::LinkClearedEvent<XData>>().length(), 0);
     ts::return_shared(p);
     scenario.end();
 }

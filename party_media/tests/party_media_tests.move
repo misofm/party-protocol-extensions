@@ -26,37 +26,31 @@ fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
 fun set_sequence_replace_equal_max_clear_reinsert() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
 
     assert!(!media::has_media(&p));
     assert!(media::quilt(&p).is_none());
 
-    // Insert 1: zero is the previous-value sentinel only on this path.
+    // Insert 1.
     media::set_media(&mut p, &cap, 1u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 1);
-    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 129);
-    let (event_party_id, event_cap_id, existed_before, previous_quilt, quilt) =
-        media::set_event_fields(&set_events[0]);
+    assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 64);
+    let (event_party_id, quilt) = media::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert!(!existed_before);
-    assert_eq!(previous_quilt, 0u256);
     assert_eq!(quilt, 1u256);
     assert_eq!(media::quilt(&p).destroy_some(), 1u256);
 
-    // Replace 2: report the actual prior value.
+    // Replace 2: report the new value.
     media::set_media(&mut p, &cap, 2u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 2);
-    let (_, _, existed_before, previous_quilt, quilt) = media::set_event_fields(&set_events[1]);
-    assert!(existed_before);
-    assert_eq!(previous_quilt, 1u256);
+    let (event_party_id, quilt) = media::set_event_fields(&set_events[1]);
+    assert_eq!(event_party_id, party_id);
     assert_eq!(quilt, 2u256);
     assert_eq!(media::quilt(&p).destroy_some(), 2u256);
 
-    // Equal replacement is still a write but emits no redundant event.
+    // Equal replacement is a no-op and emits nothing.
     media::set_media(&mut p, &cap, 2u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 2);
@@ -66,34 +60,27 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     media::set_media(&mut p, &cap, MAX_QUILT);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 3);
-    let (_, _, existed_before, previous_quilt, quilt) = media::set_event_fields(&set_events[2]);
-    assert!(existed_before);
-    assert_eq!(previous_quilt, 2u256);
+    let (event_party_id, quilt) = media::set_event_fields(&set_events[2]);
+    assert_eq!(event_party_id, party_id);
     assert_eq!(quilt, MAX_QUILT);
     assert_eq!(media::quilt(&p).destroy_some(), MAX_QUILT);
 
     media::clear_media(&mut p, &cap);
     let cleared_events = event::events_by_type<media::MediaClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
-    assert_eq!(std::bcs::to_bytes(&cleared_events[0]).length(), 96);
-    let (event_party_id, event_cap_id, previous_quilt) =
-        media::cleared_event_fields(&cleared_events[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(previous_quilt, MAX_QUILT);
+    assert_eq!(std::bcs::to_bytes(&cleared_events[0]).length(), 32);
+    assert_eq!(media::cleared_event_fields(&cleared_events[0]), party_id);
     assert!(!media::has_media(&p));
     assert!(media::quilt(&p).is_none());
 
-    // Clearing absent media is silent; a later insert reports the absent
-    // state again and uses zero only as its previous-value sentinel.
+    // Clearing absent media is silent; a later insert emits again.
     media::clear_media(&mut p, &cap);
     assert_eq!(event::events_by_type<media::MediaClearedEvent>().length(), 1);
     media::set_media(&mut p, &cap, 3u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 4);
-    let (_, _, existed_before, previous_quilt, quilt) = media::set_event_fields(&set_events[3]);
-    assert!(!existed_before);
-    assert_eq!(previous_quilt, 0u256);
+    let (event_party_id, quilt) = media::set_event_fields(&set_events[3]);
+    assert_eq!(event_party_id, party_id);
     assert_eq!(quilt, 3u256);
 
     destroy(p);
@@ -148,7 +135,7 @@ fun views_are_silent() {
 fun shared_party_cap_holder_and_reader() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
@@ -158,8 +145,9 @@ fun shared_party_cap_holder_and_reader() {
     media::set_media(&mut p, &cap, 129u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 1);
-    let (_, event_cap_id, _, _, _) = media::set_event_fields(&set_events[0]);
-    assert_eq!(event_cap_id, admin_cap_id);
+    let (event_party_id, quilt) = media::set_event_fields(&set_events[0]);
+    assert_eq!(event_party_id, party_id);
+    assert_eq!(quilt, 129u256);
     ts::return_shared(p);
     scenario.return_to_sender(cap);
 

@@ -161,11 +161,10 @@ fun add_tag_with_wrong_cap_on_full_set_aborts() {
 }
 
 #[test]
-fun mutation_events_snapshot_counts_and_final_reclaim_without_clear_event() {
+fun mutation_events_carry_tags_and_final_reclaim_without_clear_event() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     tags::add_tag(&mut p, &cap, b"ambient".to_string());
     tags::add_tag(&mut p, &cap, b"deconstructed club".to_string());
     tags::remove_tag(&mut p, &cap, b"ambient".to_string());
@@ -173,29 +172,21 @@ fun mutation_events_snapshot_counts_and_final_reclaim_without_clear_event() {
 
     let added = event::events_by_type<tags::TagAddedEvent>();
     assert_eq!(added.length(), 2);
-    let (event_party_id, event_cap_id, tag, before, after) = tags::added_event_fields(&added[0]);
+    let (event_party_id, tag) = tags::added_event_fields(&added[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(tag, b"ambient");
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
-    let (_, _, tag, before, after) = tags::added_event_fields(&added[1]);
-    assert_eq!(tag, b"deconstructed club");
-    assert_eq!(before, 1);
-    assert_eq!(after, 2);
+    assert_eq!(tag, b"ambient".to_string());
+    let (event_party_id, tag) = tags::added_event_fields(&added[1]);
+    assert_eq!(event_party_id, party_id);
+    assert_eq!(tag, b"deconstructed club".to_string());
 
     let removed = event::events_by_type<tags::TagRemovedEvent>();
     assert_eq!(removed.length(), 2);
-    let (event_party_id, event_cap_id, tag, before, after) = tags::removed_event_fields(&removed[0]);
+    let (event_party_id, tag) = tags::removed_event_fields(&removed[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(tag, b"ambient");
-    assert_eq!(before, 2);
-    assert_eq!(after, 1);
-    let (_, _, tag, before, after) = tags::removed_event_fields(&removed[1]);
-    assert_eq!(tag, b"deconstructed club");
-    assert_eq!(before, 1);
-    assert_eq!(after, 0);
+    assert_eq!(tag, b"ambient".to_string());
+    let (event_party_id, tag) = tags::removed_event_fields(&removed[1]);
+    assert_eq!(event_party_id, party_id);
+    assert_eq!(tag, b"deconstructed club".to_string());
 
     assert!(!tags::has_tags(&p));
     assert_eq!(event::events_by_type<tags::TagsClearedEvent>().length(), 0);
@@ -204,11 +195,10 @@ fun mutation_events_snapshot_counts_and_final_reclaim_without_clear_event() {
 }
 
 #[test]
-fun clear_event_reports_counts_and_absent_repeat_is_silent() {
+fun clear_event_reports_party_and_absent_repeat_is_silent() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     tags::add_tag(&mut p, &cap, b"Ambient".to_string());
     tags::add_tag(&mut p, &cap, b" ambient ".to_string());
     tags::add_tag(&mut p, &cap, std::string::utf8(vector[99, 97, 102, 0xc3, 0xa9]));
@@ -217,12 +207,7 @@ fun clear_event_reports_counts_and_absent_repeat_is_silent() {
 
     let cleared = event::events_by_type<tags::TagsClearedEvent>();
     assert_eq!(cleared.length(), 1);
-    let (event_party_id, event_cap_id, before, after) =
-        tags::cleared_event_fields(&cleared[0]);
-    assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(before, 3);
-    assert_eq!(after, 0);
+    assert_eq!(tags::cleared_event_fields(&cleared[0]), party_id);
     assert!(!tags::has_tags(&p));
     destroy(p);
     destroy(cap);
@@ -242,20 +227,16 @@ fun thirty_max_length_tags_have_expected_event_bcs_sizes() {
     let added = event::events_by_type<tags::TagAddedEvent>();
     assert_eq!(added.length(), 30);
     30u64.do!(|i| {
-        assert_eq!(bcs::to_bytes(&added[i]).length(), 131);
-        let (_, _, tag, before, after) = tags::added_event_fields(&added[i]);
-        assert_eq!(tag, *expected_tags.borrow(i));
-        assert_eq!(before, i);
-        assert_eq!(after, i + 1);
+        // 32 (ID) + 1 (len) + 50 (tag).
+        assert_eq!(bcs::to_bytes(&added[i]).length(), 83);
+        let (_, tag) = tags::added_event_fields(&added[i]);
+        assert_eq!(tag, expected_tags[i].to_string());
     });
 
     tags::clear_tags(&mut p, &cap);
     let cleared = event::events_by_type<tags::TagsClearedEvent>();
     assert_eq!(cleared.length(), 1);
-    assert_eq!(bcs::to_bytes(&cleared[0]).length(), 80);
-    let (_, _, before, after) = tags::cleared_event_fields(&cleared[0]);
-    assert_eq!(before, 30);
-    assert_eq!(after, 0);
+    assert_eq!(bcs::to_bytes(&cleared[0]).length(), 32);
     destroy(p);
     destroy(cap);
 }
@@ -283,11 +264,10 @@ fun views_are_silent_and_preserve_exact_utf8_whitespace_and_case() {
 }
 
 #[test]
-fun transferred_cap_identity_is_emitted() {
+fun transferred_cap_can_add_tag() {
     let mut scenario = ts::begin(OWNER);
     let (p, cap) = new_party(scenario.ctx());
-    let party_id = object::id(&p).to_address();
-    let admin_cap_id = object::id(&cap).to_address();
+    let party_id = object::id(&p);
     party::share(p, &cap);
     transfer::public_transfer(cap, OWNER);
 
@@ -297,11 +277,9 @@ fun transferred_cap_identity_is_emitted() {
     tags::add_tag(&mut p, &cap, b"transferred".to_string());
     let added = event::events_by_type<tags::TagAddedEvent>();
     assert_eq!(added.length(), 1);
-    let (event_party_id, event_cap_id, _, before, after) = tags::added_event_fields(&added[0]);
+    let (event_party_id, tag) = tags::added_event_fields(&added[0]);
     assert_eq!(event_party_id, party_id);
-    assert_eq!(event_cap_id, admin_cap_id);
-    assert_eq!(before, 0);
-    assert_eq!(after, 1);
+    assert_eq!(tag, b"transferred".to_string());
     ts::return_shared(p);
     scenario.return_to_sender(cap);
     scenario.end();
