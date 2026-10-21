@@ -107,44 +107,44 @@ public fun facebook(handle: String): PlatformLink<FacebookData> {
 
 // === View Functions ===
 
-public fun x_handle(self: &XData): String {
-    self.handle
+public fun x_handle(data: &XData): String {
+    data.handle
 }
 
-public fun instagram_handle(self: &InstagramData): String {
-    self.handle
+public fun instagram_handle(data: &InstagramData): String {
+    data.handle
 }
 
-public fun threads_handle(self: &ThreadsData): String {
-    self.handle
+public fun threads_handle(data: &ThreadsData): String {
+    data.handle
 }
 
-public fun tiktok_handle(self: &TikTokData): String {
-    self.handle
+public fun tiktok_handle(data: &TikTokData): String {
+    data.handle
 }
 
-public fun youtube_handle(self: &YouTubeData): String {
-    self.handle
+public fun youtube_handle(data: &YouTubeData): String {
+    data.handle
 }
 
-public fun discord_handle(self: &DiscordData): String {
-    self.handle
+public fun discord_handle(data: &DiscordData): String {
+    data.handle
 }
 
-public fun telegram_handle(self: &TelegramData): String {
-    self.handle
+public fun telegram_handle(data: &TelegramData): String {
+    data.handle
 }
 
-public fun reddit_handle(self: &RedditData): String {
-    self.handle
+public fun reddit_handle(data: &RedditData): String {
+    data.handle
 }
 
-public fun twitch_handle(self: &TwitchData): String {
-    self.handle
+public fun twitch_handle(data: &TwitchData): String {
+    data.handle
 }
 
-public fun facebook_handle(self: &FacebookData): String {
-    self.handle
+public fun facebook_handle(data: &FacebookData): String {
+    data.handle
 }
 
 // === Private Functions ===

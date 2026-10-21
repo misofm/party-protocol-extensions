@@ -91,23 +91,23 @@ public fun custom(name: String): ArtistRole {
     ArtistRole::Custom(name)
 }
 
-public fun add_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(self);
-    set::add(self.uid_mut(cap), RolesKey(), role, MAX_ROLES);
+public fun add_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
+    let party_id = object::id(party);
+    set::add(party.uid_mut(cap), RolesKey(), role, MAX_ROLES);
     emit(RoleAddedEvent { party_id, role });
 }
 
 /// The whole field is dropped when the last role leaves.
-public fun remove_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(self);
-    set::remove(self.uid_mut(cap), RolesKey(), role);
+public fun remove_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
+    let party_id = object::id(party);
+    set::remove(party.uid_mut(cap), RolesKey(), role);
     emit(RoleRemovedEvent { party_id, role });
 }
 
 /// No-op if none is set.
-public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_roles(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (set::exists(uid, RolesKey())) {
         set::clear<RolesKey, ArtistRole>(uid, RolesKey());
         emit(RolesClearedEvent { party_id });
@@ -116,16 +116,16 @@ public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_roles(self: &Party): bool {
-    set::exists(self.uid(), RolesKey())
+public fun has_roles(party: &Party): bool {
+    set::exists(party.uid(), RolesKey())
 }
 
-public fun has_role(self: &Party, role: ArtistRole): bool {
-    set::contains(self.uid(), RolesKey(), &role)
+public fun has_role(party: &Party, role: ArtistRole): bool {
+    set::contains(party.uid(), RolesKey(), &role)
 }
 
-public fun roles(self: &Party): vector<ArtistRole> {
-    set::keys(self.uid(), RolesKey())
+public fun roles(party: &Party): vector<ArtistRole> {
+    set::keys(party.uid(), RolesKey())
 }
 
 public fun role_name(self: &ArtistRole): String {

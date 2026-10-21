@@ -67,7 +67,7 @@ public struct PartyProfileClearedEvent has copy, drop {
 /// Validation happens before authorization. An initial profile always emits; an equal
 /// replacement does not.
 public fun set_profile(
-    self: &mut Party,
+    party: &mut Party,
     cap: &PartyAdminCap,
     bio_short: String,
     bio_long: Option<String>,
@@ -81,10 +81,10 @@ public fun set_profile(
     });
     validate_languages(&languages);
 
-    let party_id = object::id(self);
+    let party_id = object::id(party);
     let event = PartyProfileSetEvent { party_id, bio_short, bio_long, country, languages };
     let profile = Profile { bio_short, bio_long, country, languages };
-    let uid = self.uid_mut(cap);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, ProfileKey())) {
         let previous: &mut Profile = df::borrow_mut(uid, ProfileKey());
         if (previous == &profile) return;
@@ -97,9 +97,9 @@ public fun set_profile(
 
 /// Removes the party's profile. Authorization happens before checking
 /// existence; an absent field is a silent no-op.
-public fun clear_profile(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_profile(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, ProfileKey())) {
         let _: Profile = df::remove(uid, ProfileKey());
         emit(PartyProfileClearedEvent { party_id });
@@ -108,13 +108,13 @@ public fun clear_profile(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_profile(self: &Party): bool {
-    df::exists(self.uid(), ProfileKey())
+public fun has_profile(party: &Party): bool {
+    df::exists(party.uid(), ProfileKey())
 }
 
-public fun profile(self: &Party): &Profile {
-    assert!(df::exists(self.uid(), ProfileKey()), ENoProfile);
-    df::borrow(self.uid(), ProfileKey())
+public fun profile(party: &Party): &Profile {
+    assert!(df::exists(party.uid(), ProfileKey()), ENoProfile);
+    df::borrow(party.uid(), ProfileKey())
 }
 
 public fun bio_short(self: &Profile): String {

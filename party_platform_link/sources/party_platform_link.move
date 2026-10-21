@@ -18,16 +18,16 @@ use platform_link::platform_link::{Self, PlatformLink};
 
 /// An equal replacement is silent.
 public fun set_link<Data: copy + drop + store>(
-    self: &mut Party,
+    party: &mut Party,
     cap: &PartyAdminCap,
     link: PlatformLink<Data>,
 ) {
-    platform_link::set(self.uid_mut(cap), link);
+    platform_link::set(party.uid_mut(cap), link);
 }
 
 /// Authorization is checked before existence; absent and repeated clears are silent.
-public fun clear_link<Data: copy + drop + store>(self: &mut Party, cap: &PartyAdminCap) {
-    let uid = self.uid_mut(cap);
+public fun clear_link<Data: copy + drop + store>(party: &mut Party, cap: &PartyAdminCap) {
+    let uid = party.uid_mut(cap);
     if (platform_link::exists_<Data>(uid)) {
         platform_link::clear<Data>(uid);
     }
@@ -35,10 +35,10 @@ public fun clear_link<Data: copy + drop + store>(self: &mut Party, cap: &PartyAd
 
 // === View Functions ===
 
-public fun has_link<Data: copy + drop + store>(self: &Party): bool {
-    platform_link::exists_<Data>(self.uid())
+public fun has_link<Data: copy + drop + store>(party: &Party): bool {
+    platform_link::exists_<Data>(party.uid())
 }
 
-public fun link<Data: copy + drop + store>(self: &Party): Option<PlatformLink<Data>> {
-    platform_link::get<Data>(self.uid())
+public fun link<Data: copy + drop + store>(party: &Party): Option<PlatformLink<Data>> {
+    platform_link::get<Data>(party.uid())
 }

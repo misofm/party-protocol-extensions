@@ -49,26 +49,26 @@ public struct TagsClearedEvent has copy, drop {
 
 // === Public Functions ===
 
-public fun add_tag(self: &mut Party, cap: &PartyAdminCap, tag: String) {
+public fun add_tag(party: &mut Party, cap: &PartyAdminCap, tag: String) {
     assert!(!tag.is_empty(), EEmptyTag);
     assert!(tag.length() <= MAX_TAG_LENGTH, ETagTooLong);
-    let party_id = object::id(self);
-    set::add(self.uid_mut(cap), TagsKey(), tag, MAX_TAGS);
+    let party_id = object::id(party);
+    set::add(party.uid_mut(cap), TagsKey(), tag, MAX_TAGS);
     emit(TagAddedEvent { party_id, tag });
 }
 
 /// The whole field is dropped when the last tag leaves, so `has_tags` tracks "carries
 /// tags", not "has ever tagged".
-public fun remove_tag(self: &mut Party, cap: &PartyAdminCap, tag: String) {
-    let party_id = object::id(self);
-    set::remove(self.uid_mut(cap), TagsKey(), tag);
+public fun remove_tag(party: &mut Party, cap: &PartyAdminCap, tag: String) {
+    let party_id = object::id(party);
+    set::remove(party.uid_mut(cap), TagsKey(), tag);
     emit(TagRemovedEvent { party_id, tag });
 }
 
 /// No-op if none is set.
-public fun clear_tags(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_tags(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (set::exists(uid, TagsKey())) {
         set::clear<TagsKey, String>(uid, TagsKey());
         emit(TagsClearedEvent { party_id });
@@ -77,16 +77,16 @@ public fun clear_tags(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_tags(self: &Party): bool {
-    set::exists(self.uid(), TagsKey())
+public fun has_tags(party: &Party): bool {
+    set::exists(party.uid(), TagsKey())
 }
 
-public fun has_tag(self: &Party, tag: String): bool {
-    set::contains(self.uid(), TagsKey(), &tag)
+public fun has_tag(party: &Party, tag: String): bool {
+    set::contains(party.uid(), TagsKey(), &tag)
 }
 
-public fun tags(self: &Party): vector<String> {
-    set::keys(self.uid(), TagsKey())
+public fun tags(party: &Party): vector<String> {
+    set::keys(party.uid(), TagsKey())
 }
 
 // === Test Functions ===

@@ -44,24 +44,24 @@ public struct GenresClearedEvent has copy, drop {
 
 // === Public Functions ===
 
-public fun add_genre(self: &mut Party, cap: &PartyAdminCap, genre: &Genre) {
-    let party_id = object::id(self);
+public fun add_genre(party: &mut Party, cap: &PartyAdminCap, genre: &Genre) {
+    let party_id = object::id(party);
     let genre_id = object::id(genre);
-    set::add(self.uid_mut(cap), GenresKey(), genre_id, MAX_GENRES);
+    set::add(party.uid_mut(cap), GenresKey(), genre_id, MAX_GENRES);
     emit(GenreAddedEvent { party_id, genre_id, genre_name: *genre.name() });
 }
 
 /// The whole field is dropped when the last genre leaves.
-public fun remove_genre(self: &mut Party, cap: &PartyAdminCap, genre_id: ID) {
-    let party_id = object::id(self);
-    set::remove(self.uid_mut(cap), GenresKey(), genre_id);
+public fun remove_genre(party: &mut Party, cap: &PartyAdminCap, genre_id: ID) {
+    let party_id = object::id(party);
+    set::remove(party.uid_mut(cap), GenresKey(), genre_id);
     emit(GenreRemovedEvent { party_id, genre_id });
 }
 
 /// No-op if none is set.
-public fun clear_genres(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_genres(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (set::exists(uid, GenresKey())) {
         set::clear<GenresKey, ID>(uid, GenresKey());
         emit(GenresClearedEvent { party_id });
@@ -70,16 +70,16 @@ public fun clear_genres(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_genres(self: &Party): bool {
-    set::exists(self.uid(), GenresKey())
+public fun has_genres(party: &Party): bool {
+    set::exists(party.uid(), GenresKey())
 }
 
-public fun has_genre(self: &Party, genre_id: ID): bool {
-    set::contains(self.uid(), GenresKey(), &genre_id)
+public fun has_genre(party: &Party, genre_id: ID): bool {
+    set::contains(party.uid(), GenresKey(), &genre_id)
 }
 
-public fun genres(self: &Party): vector<ID> {
-    set::keys(self.uid(), GenresKey())
+public fun genres(party: &Party): vector<ID> {
+    set::keys(party.uid(), GenresKey())
 }
 
 // === Test Functions ===

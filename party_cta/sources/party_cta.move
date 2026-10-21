@@ -63,10 +63,10 @@ public fun new_cta(label: String, url: String): Cta {
 
 /// Position is priority. Length is checked before authorization. An empty first
 /// attachment emits; an equal replacement does not.
-public fun set_ctas(self: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
+public fun set_ctas(party: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
     assert!(ctas.length() <= MAX_CTAS, ETooManyCtas);
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, CtasKey())) {
         let previous: &mut vector<Cta> = df::borrow_mut(uid, CtasKey());
         if (*previous == ctas) return;
@@ -79,9 +79,9 @@ public fun set_ctas(self: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
 
 /// Removes the party's CTA list. Authorization happens before checking
 /// existence; an absent list is a silent no-op.
-public fun clear_ctas(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_ctas(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, CtasKey())) {
         let _: vector<Cta> = df::remove(uid, CtasKey());
         emit(CtasClearedEvent { party_id });
@@ -90,13 +90,13 @@ public fun clear_ctas(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_ctas(self: &Party): bool {
-    df::exists(self.uid(), CtasKey())
+public fun has_ctas(party: &Party): bool {
+    df::exists(party.uid(), CtasKey())
 }
 
-public fun ctas(self: &Party): vector<Cta> {
-    if (!df::exists(self.uid(), CtasKey())) return vector[];
-    *df::borrow<CtasKey, vector<Cta>>(self.uid(), CtasKey())
+public fun ctas(party: &Party): vector<Cta> {
+    if (!df::exists(party.uid(), CtasKey())) return vector[];
+    *df::borrow<CtasKey, vector<Cta>>(party.uid(), CtasKey())
 }
 
 public fun label(self: &Cta): String {

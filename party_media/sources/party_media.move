@@ -43,10 +43,10 @@ public struct MediaClearedEvent has copy, drop {
 // === Public Functions ===
 
 /// The zero check runs before authorization.
-public fun set_media(self: &mut Party, cap: &PartyAdminCap, quilt: u256) {
+public fun set_media(party: &mut Party, cap: &PartyAdminCap, quilt: u256) {
     assert!(quilt != 0, EZeroQuilt);
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, MediaKey())) {
         let media: &mut Media = df::borrow_mut(uid, MediaKey());
         if (media.quilt == quilt) return;
@@ -59,9 +59,9 @@ public fun set_media(self: &mut Party, cap: &PartyAdminCap, quilt: u256) {
 
 /// Removes the party's media. Authorization happens before checking
 /// existence; an absent field is a silent no-op.
-public fun clear_media(self: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(self);
-    let uid = self.uid_mut(cap);
+public fun clear_media(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
     if (df::exists(uid, MediaKey())) {
         let Media { quilt: _ } = df::remove(uid, MediaKey());
         emit(MediaClearedEvent { party_id });
@@ -70,13 +70,13 @@ public fun clear_media(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-public fun has_media(self: &Party): bool {
-    df::exists(self.uid(), MediaKey())
+public fun has_media(party: &Party): bool {
+    df::exists(party.uid(), MediaKey())
 }
 
-public fun quilt(self: &Party): Option<u256> {
-    if (!df::exists(self.uid(), MediaKey())) return option::none();
-    option::some(df::borrow<MediaKey, Media>(self.uid(), MediaKey()).quilt)
+public fun quilt(party: &Party): Option<u256> {
+    if (!df::exists(party.uid(), MediaKey())) return option::none();
+    option::some(df::borrow<MediaKey, Media>(party.uid(), MediaKey()).quilt)
 }
 
 // === Test Functions ===

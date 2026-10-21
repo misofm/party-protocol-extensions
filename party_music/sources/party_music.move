@@ -92,36 +92,36 @@ public fun audiomack(username: String): PlatformLink<AudiomackData> {
 
 // === View Functions ===
 
-public fun spotify_artist_id(self: &SpotifyData): String {
-    self.artist_id
+public fun spotify_artist_id(data: &SpotifyData): String {
+    data.artist_id
 }
 
-public fun bandcamp_subdomain(self: &BandcampData): String {
-    self.subdomain
+public fun bandcamp_subdomain(data: &BandcampData): String {
+    data.subdomain
 }
 
-public fun soundcloud_username(self: &SoundCloudData): String {
-    self.username
+public fun soundcloud_username(data: &SoundCloudData): String {
+    data.username
 }
 
-public fun apple_music_artist_id(self: &AppleMusicData): String {
-    self.artist_id
+public fun apple_music_artist_id(data: &AppleMusicData): String {
+    data.artist_id
 }
 
-public fun deezer_artist_id(self: &DeezerData): String {
-    self.artist_id
+public fun deezer_artist_id(data: &DeezerData): String {
+    data.artist_id
 }
 
-public fun tidal_artist_id(self: &TidalData): String {
-    self.artist_id
+public fun tidal_artist_id(data: &TidalData): String {
+    data.artist_id
 }
 
-public fun amazon_music_artist_id(self: &AmazonMusicData): String {
-    self.artist_id
+public fun amazon_music_artist_id(data: &AmazonMusicData): String {
+    data.artist_id
 }
 
-public fun audiomack_username(self: &AudiomackData): String {
-    self.username
+public fun audiomack_username(data: &AudiomackData): String {
+    data.username
 }
 
 // === Private Functions ===

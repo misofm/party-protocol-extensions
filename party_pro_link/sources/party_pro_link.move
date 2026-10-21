@@ -98,40 +98,40 @@ public fun kofi(handle: String): PlatformLink<KofiData> {
 
 // === View Functions ===
 
-public fun website_url(self: &WebsiteData): String {
-    self.url
+public fun website_url(data: &WebsiteData): String {
+    data.url
 }
 
-public fun booking_url(self: &BookingPageData): String {
-    self.url
+public fun booking_url(data: &BookingPageData): String {
+    data.url
 }
 
-public fun management_url(self: &ManagementPageData): String {
-    self.url
+public fun management_url(data: &ManagementPageData): String {
+    data.url
 }
 
-public fun publisher_url(self: &PublisherPageData): String {
-    self.url
+public fun publisher_url(data: &PublisherPageData): String {
+    data.url
 }
 
-public fun label_url(self: &LabelPageData): String {
-    self.url
+public fun label_url(data: &LabelPageData): String {
+    data.url
 }
 
-public fun epk_url(self: &EpkData): String {
-    self.url
+public fun epk_url(data: &EpkData): String {
+    data.url
 }
 
-public fun patreon_handle(self: &PatreonData): String {
-    self.handle
+public fun patreon_handle(data: &PatreonData): String {
+    data.handle
 }
 
-public fun substack_subdomain(self: &SubstackData): String {
-    self.subdomain
+public fun substack_subdomain(data: &SubstackData): String {
+    data.subdomain
 }
 
-public fun kofi_handle(self: &KofiData): String {
-    self.handle
+public fun kofi_handle(data: &KofiData): String {
+    data.handle
 }
 
 // === Private Functions ===
