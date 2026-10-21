@@ -22,7 +22,7 @@ vocabulary object exists; removal is by ID. All mutations require the matching
 |---|---|---|
 | `miso_party` | `https://github.com/misofm/party-protocol.git` | `9374c6eed64c907722ac1c93813c76dc7912b357` |
 | `typed_set` | `https://github.com/unconfirmedlabs/typed_set.git` | `b37474cbde166b7ddf8a3b615cd89f90182ace6f` |
-| `genre` | `https://github.com/misofm/genre.git` | `c891068a038d53564baf3134276fcd42f68fb0c8` |
+| `genre` | `https://github.com/misofm/genre.git` | `78e34e9587ad56d2477289d03adb6c850565a531` |
 
 The manifest has no local-path or floating dependencies.
 

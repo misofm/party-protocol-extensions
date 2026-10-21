@@ -71,7 +71,7 @@ surfaces from a dependency:
   `b37474cbde166b7ddf8a3b615cd89f90182ace6f` — bounded-set storage,
   duplicate/capacity checks, and field reclamation.
 - [`genre`](https://github.com/misofm/genre) at
-  `c891068a038d53564baf3134276fcd42f68fb0c8` — the canonical shared genre
+  `78e34e9587ad56d2477289d03adb6c850565a531` — the canonical shared genre
   vocabulary.
 
 All are exact Git pins; this manifest has no local-path dependencies.
