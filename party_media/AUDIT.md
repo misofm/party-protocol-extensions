@@ -23,7 +23,7 @@ convention, and no media bytes or funds are stored.
 
 | Dependency | Repository | Revision |
 |---|---|---|
-| `miso_party` | `https://github.com/misofm/party-protocol.git` | `65f22c8a0e8e32ac4ee52322536a15cbb5b0a429` |
+| `miso_party` | `https://github.com/misofm/party-protocol.git` | `8e59a815dc1129166b66a76d568edb8822859255` |
 
 The manifest has no local-path or floating dependencies.
 

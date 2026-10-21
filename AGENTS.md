@@ -91,7 +91,7 @@ leaving the reader guessing.
 
 <2–4 sentences: what slice of the profile this owns, why it exists as its own
 package, and any load-bearing design decision (e.g. proven-at-write-time,
-replace-in-place, client convention). Match the module header doc.>
+replace-in-place, client convention).>
 
 ## What it stores
 <Dynamic-field key type(s), value type and shape, limits/capacities, and the
@@ -130,14 +130,13 @@ name.
 Add or update the package's row in its phase table. If the roadmap described
 the package aspirationally and reality differs, the roadmap loses — update it.
 
-### 4. In-code docs (as you write the module)
+### 4. No comments in Move code
 
-- Module header doc comment: what the slice is, where the mechanics live,
-  where aborts come from, who gates writes. This header is the source the
-  package README condenses — keep them in sync.
-- Doc comments on every public type, function, event, error constant, and
-  storage constant. State abort conditions on the function that aborts.
-- After any refactor, sweep comments that describe the old behavior.
+`.move` files carry no comments except the column-0 license header and
+top-level `// === Section ===` markers. Facts the code cannot state
+(invariants, bounds, call order, trust assumptions, Sui runtime behavior,
+non-obvious aborts, why something is absent) go in the package README as short
+bullets (Integrator notes). After any refactor, update those bullets.
 
 ## Style rules
 
@@ -157,4 +156,4 @@ the package aspirationally and reality differs, the roadmap loses — update it.
   Functions (`// === Name ===`). Dynamic-field keys come last in Structs.
 - Imports in one block ordered std, sui, external packages, this package.
 - Errors are plain `u64` constants numbered from 0 in declaration order.
-- Lines stay within 100 columns; doc comments stay short.
+- Lines stay within 100 columns.
