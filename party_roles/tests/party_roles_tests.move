@@ -70,7 +70,7 @@ fun add_remove_and_query() {
     roles::add_role(&mut p, &cap, roles::band());
     roles::clear_roles(&mut p, &cap);
     assert!(!roles::has_roles(&p));
-    roles::clear_roles(&mut p, &cap); // no-op when absent
+    roles::clear_roles(&mut p, &cap);
 
     destroy(p);
     destroy(cap);
@@ -124,7 +124,7 @@ fun remove_absent_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
     roles::add_role(&mut p, &cap, roles::artist());
-    roles::remove_role(&mut p, &cap, roles::dj()); // not held
+    roles::remove_role(&mut p, &cap, roles::dj());
     abort
 }
 
@@ -132,7 +132,6 @@ fun remove_absent_aborts() {
 fun rejects_over_max() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    // 8 canonical roles + customs until the 13th trips MAX_ROLES (12).
     roles::add_role(&mut p, &cap, roles::artist());
     roles::add_role(&mut p, &cap, roles::producer());
     roles::add_role(&mut p, &cap, roles::dj());
@@ -161,10 +160,6 @@ fun add_role_with_wrong_cap_on_full_set_aborts() {
     let (mut p, cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // Fill `p`'s role set to MAX_ROLES (12): the 8 canonical roles + 4
-    // customs. A capacity check, if it ran before authorization, would also
-    // abort here — proving the cap-gate really does run first, not just
-    // when there's room to add.
     roles::add_role(&mut p, &cap, roles::artist());
     roles::add_role(&mut p, &cap, roles::producer());
     roles::add_role(&mut p, &cap, roles::dj());
@@ -270,7 +265,6 @@ fun multibyte_sixty_byte_name_is_bounded_and_event_is_94_bytes() {
     roles::add_role(&mut p, &cap, roles::custom(name.to_string()));
     let added = event::events_by_type<roles::RoleAddedEvent>();
     assert_eq!(added.length(), 1);
-    // 32 (ID) + 1 (variant) + 1 (len) + 60 (name).
     assert_eq!(bcs::to_bytes(&added[0]).length(), 94);
     let (_, role) = roles::added_event_fields(&added[0]);
     assert_eq!(role, roles::custom(name.to_string()));
@@ -341,7 +335,6 @@ fun clear_repeated_is_silent_and_readd_emits() {
     destroy(cap);
 }
 
-/// The duplicate check runs before the capacity check.
 #[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let ctx = &mut tx_context::dummy();

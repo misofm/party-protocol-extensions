@@ -44,7 +44,6 @@ fun rejects_empty_bandcamp_subdomain() {
 
 #[test, expected_failure(abort_code = music::EIdTooLong)]
 fun rejects_overlong_id() {
-    // 257 bytes — one over the shared backstop (platform_link::max_identifier_length(), 256).
     let long = vector::tabulate!(257, |_| 97u8).to_string();
     let _ = music::spotify(long);
     abort

@@ -1,11 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// A party's editable profile card: the free-form identity fields a profile page renders.
-///
-/// Roles, tags, genres, media and links each live in their own extension. The party's name
-/// lives on the core `Party`, and the join date comes from its creation event. Equal
-/// replacements and absent clears are silent.
 module party_profile::party_profile;
 
 // === Imports ===
@@ -30,10 +25,7 @@ const EDuplicateLanguage: u64 = 6;
 
 // === Constants ===
 
-/// In bytes.
 const MAX_BIO_SHORT_LENGTH: u64 = 300;
-/// In bytes (8 KB, matching `release_description`); a storage backstop, not an editorial
-/// limit.
 const MAX_BIO_LONG_LENGTH: u64 = 8192;
 const MAX_LANGUAGES: u64 = 10;
 
@@ -64,8 +56,6 @@ public struct PartyProfileClearedEvent has copy, drop {
 
 // === Public Functions ===
 
-/// Validation happens before authorization. An initial profile always emits; an equal
-/// replacement does not.
 public fun set_profile(
     party: &mut Party,
     cap: &PartyAdminCap,
@@ -95,8 +85,6 @@ public fun set_profile(
     emit(event);
 }
 
-/// Removes the party's profile. Authorization happens before checking
-/// existence; an absent field is a silent no-op.
 public fun clear_profile(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);
@@ -140,7 +128,6 @@ fun validate_bio_short(bio_short: &String) {
     assert!(bio_short.length() <= MAX_BIO_SHORT_LENGTH, EBioShortTooLong);
 }
 
-// Codes are valid by construction; only count and duplicates are checked.
 fun validate_languages(languages: &vector<LanguageCode>) {
     assert!(languages.length() <= MAX_LANGUAGES, ETooManyLanguages);
     let mut seen = vec_set::empty<LanguageCode>();

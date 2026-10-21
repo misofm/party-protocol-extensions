@@ -52,7 +52,7 @@ fun add_remove_and_query() {
     tags::add_tag(&mut p, &cap, b"leftfield pop".to_string());
     tags::clear_tags(&mut p, &cap);
     assert!(!tags::has_tags(&p));
-    tags::clear_tags(&mut p, &cap); // no-op when absent
+    tags::clear_tags(&mut p, &cap);
 
     destroy(p);
     destroy(cap);
@@ -110,7 +110,7 @@ fun remove_absent_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
     tags::add_tag(&mut p, &cap, b"ambient".to_string());
-    tags::remove_tag(&mut p, &cap, b"techno".to_string()); // not carried
+    tags::remove_tag(&mut p, &cap, b"techno".to_string());
     abort
 }
 
@@ -118,7 +118,6 @@ fun remove_absent_aborts() {
 fun rejects_over_max() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    // 31 distinct tags (two-char names) trips MAX_TAGS (30).
     31u64.do!(|i| {
         let tag = std::string::utf8(vector[b"t"[0], ((65 + i) as u8)]);
         tags::add_tag(&mut p, &cap, tag);
@@ -142,9 +141,6 @@ fun add_tag_with_wrong_cap_on_full_set_aborts() {
     let (mut p, cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // Fill `p`'s tag set to MAX_TAGS (30) so a capacity check, if it ran
-    // before authorization, would also abort here — proving the cap-gate
-    // really does run first, not just when there's room to add.
     30u64.do!(|i| {
         let tag = std::string::utf8(vector[b"t"[0], ((65 + i) as u8)]);
         tags::add_tag(&mut p, &cap, tag);
@@ -221,7 +217,6 @@ fun thirty_max_length_tags_have_expected_event_bcs_sizes() {
     let added = event::events_by_type<tags::TagAddedEvent>();
     assert_eq!(added.length(), 30);
     30u64.do!(|i| {
-        // 32 (ID) + 1 (len) + 50 (tag).
         assert_eq!(bcs::to_bytes(&added[i]).length(), 83);
         let (_, tag) = tags::added_event_fields(&added[i]);
         assert_eq!(tag, expected_tags[i].to_string());
@@ -328,7 +323,6 @@ fun clear_with_wrong_cap_and_absent_set_aborts_as_unauthorized() {
     abort
 }
 
-/// Tag validation runs before authorization.
 #[test, expected_failure(abort_code = tags::EEmptyTag)]
 fun empty_tag_with_wrong_cap_aborts_as_empty() {
     let ctx = &mut tx_context::dummy();
@@ -338,7 +332,6 @@ fun empty_tag_with_wrong_cap_aborts_as_empty() {
     abort
 }
 
-/// Tag validation runs before authorization.
 #[test, expected_failure(abort_code = tags::ETagTooLong)]
 fun overlong_tag_with_wrong_cap_aborts_as_too_long() {
     let ctx = &mut tx_context::dummy();
@@ -348,7 +341,6 @@ fun overlong_tag_with_wrong_cap_aborts_as_too_long() {
     abort
 }
 
-/// The duplicate check runs before the capacity check.
 #[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let ctx = &mut tx_context::dummy();

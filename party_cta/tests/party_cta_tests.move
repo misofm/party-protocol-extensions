@@ -64,7 +64,7 @@ fun set_read_replace_clear() {
     assert_eq!(cleared_events.length(), 1);
     assert_eq!(cta::cleared_event_fields(&cleared_events[0]), party_id);
     assert!(!cta::has_ctas(&p));
-    cta::clear_ctas(&mut p, &cap); // no-op
+    cta::clear_ctas(&mut p, &cap);
     assert_eq!(event::events_by_type<cta::CtasClearedEvent>().length(), 1);
 
     destroy(p);
@@ -131,9 +131,9 @@ fun storage_preserves_order_duplicates_and_multibyte_values() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
     let party_id = object::id(&p);
-    let first_label = vector[0xC3u8, 0xA9u8].to_string(); // é
+    let first_label = vector[0xC3u8, 0xA9u8].to_string();
     let first_url = vector[0x68u8, 0x74u8, 0x74u8, 0x70u8, 0x73u8, 0x3Au8,
-        0x2Fu8, 0x2Fu8, 0xE2u8, 0x98u8, 0x83u8].to_string(); // https://☃
+        0x2Fu8, 0x2Fu8, 0xE2u8, 0x98u8, 0x83u8].to_string();
     let duplicate_label = first_label;
     let duplicate_url = first_url;
     cta::set_ctas(&mut p, &cap, vector[
@@ -176,7 +176,6 @@ fun maximum_content_is_emitted_in_full() {
     let (event_party_id, event_ctas) = cta::set_event_fields(&set_events[0]);
     assert_eq!(event_party_id, party_id);
     assert_eq!(event_ctas, max_ctas());
-    // 32 (ID) + 1 (len) + 20 * ((1 + 60) + (2 + 2000)).
     assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 41293);
 
     cta::set_ctas(&mut p, &cap, max_ctas());
@@ -290,7 +289,6 @@ fun set_ctas_replace_with_wrong_cap_aborts() {
         cta::new_cta(b"Initial".to_string(), b"https://initial.example".to_string()),
     ]);
 
-    // Replacement must authorize before reading or mutating the existing list.
     cta::set_ctas(&mut p, &other_cap, vector[
         cta::new_cta(b"Replacement".to_string(), b"https://replacement.example".to_string()),
     ]);
@@ -306,7 +304,6 @@ fun set_ctas_equal_with_wrong_cap_aborts() {
         cta::new_cta(b"Initial".to_string(), b"https://initial.example".to_string()),
     ]);
 
-    // Equality must not bypass the existing PartyAdminCap authorization.
     cta::set_ctas(&mut p, &other_cap, vector[
         cta::new_cta(b"Initial".to_string(), b"https://initial.example".to_string()),
     ]);
@@ -330,8 +327,6 @@ fun clear_absent_ctas_with_wrong_cap_aborts() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
-    // Even an absent clear must reach uid_mut, so a foreign cap cannot turn
-    // the idempotent branch into an authorization bypass.
     cta::clear_ctas(&mut p, &other_cap);
     abort
 }
@@ -346,7 +341,6 @@ fun over_max_precedes_wrong_cap_authorization() {
         b"L".to_string(),
         b"https://x.com".to_string(),
     )));
-    // ETooManyCtas is checked before uid_mut's EUnauthorized check.
     cta::set_ctas(&mut p, &other_cap, list);
     abort
 }

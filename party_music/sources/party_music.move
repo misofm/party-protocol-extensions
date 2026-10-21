@@ -1,11 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Artist-level `platform_link` payloads for a party's pages on streaming and music sites.
-///
-/// Distinct from the release-level (album/track) payloads of the DSP-link extension. Only
-/// the native id is stored; clients rebuild the URL, so a platform reshaping its URLs needs
-/// no on-chain change.
 module party_music::party_music;
 
 // === Imports ===
@@ -20,21 +15,13 @@ const EIdTooLong: u64 = 1;
 
 // === Structs ===
 
-/// A Spotify artist id (the id in `open.spotify.com/artist/{id}`).
 public struct SpotifyData has copy, drop, store { artist_id: String }
-/// A Bandcamp subdomain (the `{name}` in `{name}.bandcamp.com`).
 public struct BandcampData has copy, drop, store { subdomain: String }
-/// A SoundCloud username (the `{name}` in `soundcloud.com/{name}`).
 public struct SoundCloudData has copy, drop, store { username: String }
-/// An Apple Music artist id (the numeric id in `music.apple.com/artist/{id}`).
 public struct AppleMusicData has copy, drop, store { artist_id: String }
-/// A Deezer artist id (the id in `deezer.com/artist/{id}`).
 public struct DeezerData has copy, drop, store { artist_id: String }
-/// A Tidal artist id (the id in `tidal.com/artist/{id}`).
 public struct TidalData has copy, drop, store { artist_id: String }
-/// An Amazon Music artist id (the id in `music.amazon.com/artists/{id}`).
 public struct AmazonMusicData has copy, drop, store { artist_id: String }
-/// An Audiomack username (the `{name}` in `audiomack.com/{name}`).
 public struct AudiomackData has copy, drop, store { username: String }
 
 // === Method Aliases ===

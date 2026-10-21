@@ -1,11 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Musical-genre tags for a party, drawn from the Miso genre vocabulary.
-///
-/// Stores `genre::Genre` ids, the canonical ids releases use. Adding takes a `&Genre`,
-/// proving the id is a real vocabulary entry; removal is by id. No ranking. Duplicate,
-/// missing and over-max writes abort with `typed_set`'s error codes.
 module party_genre::party_genre;
 
 // === Imports ===
@@ -22,7 +17,6 @@ const MAX_GENRES: u64 = 20;
 
 // === Structs ===
 
-/// Stored as a `VecSet<ID>` through `typed_set`.
 public struct GenresKey() has copy, drop, store;
 
 // === Events ===
@@ -51,14 +45,12 @@ public fun add_genre(party: &mut Party, cap: &PartyAdminCap, genre: &Genre) {
     emit(GenreAddedEvent { party_id, genre_id, genre_name: *genre.name() });
 }
 
-/// The whole field is dropped when the last genre leaves.
 public fun remove_genre(party: &mut Party, cap: &PartyAdminCap, genre_id: ID) {
     let party_id = object::id(party);
     set::remove(party.uid_mut(cap), GenresKey(), genre_id);
     emit(GenreRemovedEvent { party_id, genre_id });
 }
 
-/// No-op if none is set.
 public fun clear_genres(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);

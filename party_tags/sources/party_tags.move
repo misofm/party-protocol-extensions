@@ -1,11 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Free-form tags for a party: moods, scenes and descriptors (e.g. "ambient",
-/// "deconstructed club").
-///
-/// The uncurated sibling to `party_genre`. Tags are stored as given (exact dedupe).
-/// Duplicate, missing and over-max writes abort with `typed_set`'s error codes.
 module party_tags::party_tags;
 
 // === Imports ===
@@ -22,13 +17,11 @@ const ETagTooLong: u64 = 1;
 
 // === Constants ===
 
-/// In bytes.
 const MAX_TAG_LENGTH: u64 = 50;
 const MAX_TAGS: u64 = 30;
 
 // === Structs ===
 
-/// Stored as a `VecSet<String>` through `typed_set`.
 public struct TagsKey() has copy, drop, store;
 
 // === Events ===
@@ -57,15 +50,12 @@ public fun add_tag(party: &mut Party, cap: &PartyAdminCap, tag: String) {
     emit(TagAddedEvent { party_id, tag });
 }
 
-/// The whole field is dropped when the last tag leaves, so `has_tags` tracks "carries
-/// tags", not "has ever tagged".
 public fun remove_tag(party: &mut Party, cap: &PartyAdminCap, tag: String) {
     let party_id = object::id(party);
     set::remove(party.uid_mut(cap), TagsKey(), tag);
     emit(TagRemovedEvent { party_id, tag });
 }
 
-/// No-op if none is set.
 public fun clear_tags(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);

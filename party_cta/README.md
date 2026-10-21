@@ -46,7 +46,7 @@ with `EUnauthorized` at `miso_party::party`.
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set_ctas(party, cap, ctas)` | Set or replace the party's ordered CTA list; changed values emit the full list, equal replacements are silent | `ETooManyCtas` (4) when the list exceeds 20 |
+| `set_ctas(party, cap, ctas)` | Set or replace the party's ordered CTA list; changed values emit the full list, equal replacements are silent | `ETooManyCtas` (4) when the list exceeds 20, checked before authorization |
 | `clear_ctas(party, cap)` | Remove the party's CTA list | — (no-op when none is set) |
 
 ### Views

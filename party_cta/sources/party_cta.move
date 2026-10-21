@@ -1,11 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Off-Miso call-to-action links for a party (Tickets, Merch, Newsletter, external Listen).
-///
-/// On-Miso actions live in `party_featured`. The CTAs are one ordered list (position is
-/// priority) written whole with `set_ctas`, so there are no per-entry ids. Equal
-/// replacements and absent clears are silent.
 module party_cta::party_cta;
 
 // === Imports ===
@@ -25,9 +20,7 @@ const ETooManyCtas: u64 = 4;
 
 // === Constants ===
 
-/// In bytes.
 const MAX_LABEL_LENGTH: u64 = 60;
-/// In bytes.
 const MAX_URL_LENGTH: u64 = 2000;
 const MAX_CTAS: u64 = 20;
 
@@ -61,8 +54,6 @@ public fun new_cta(label: String, url: String): Cta {
     Cta { label, url }
 }
 
-/// Position is priority. Length is checked before authorization. An empty first
-/// attachment emits; an equal replacement does not.
 public fun set_ctas(party: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
     assert!(ctas.length() <= MAX_CTAS, ETooManyCtas);
     let party_id = object::id(party);
@@ -77,8 +68,6 @@ public fun set_ctas(party: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
     emit(CtasSetEvent { party_id, ctas });
 }
 
-/// Removes the party's CTA list. Authorization happens before checking
-/// existence; an absent list is a silent no-op.
 public fun clear_ctas(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);

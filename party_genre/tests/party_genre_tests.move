@@ -245,11 +245,10 @@ fun rejects_duplicate() {
     let genre = scenario.take_immutable_by_id<Genre>(id);
     let (mut p, cap) = new_party(scenario.ctx());
     pg::add_genre(&mut p, &cap, &genre);
-    pg::add_genre(&mut p, &cap, &genre); // duplicate
+    pg::add_genre(&mut p, &cap, &genre);
     abort
 }
 
-/// The duplicate check runs before the capacity check.
 #[test, expected_failure(abort_code = typed_set::typed_set::EDuplicateItem)]
 fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let mut scenario = ts::begin(CREATOR);
@@ -262,7 +261,7 @@ fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     let duplicate = scenario.take_immutable_by_id<Genre>(*ids.borrow(0));
     pg::add_genre(&mut p, &cap, &duplicate);
     fill_genres_from(&scenario, &mut p, &cap, &ids, 1, MAX_GENRES - 1);
-    pg::add_genre(&mut p, &cap, &duplicate); // duplicate must beat capacity
+    pg::add_genre(&mut p, &cap, &duplicate);
     abort
 }
 
@@ -279,7 +278,7 @@ fun wrong_cap_duplicate_on_full_set_aborts_as_unauthorized() {
     let duplicate = scenario.take_immutable_by_id<Genre>(*ids.borrow(0));
     pg::add_genre(&mut p, &cap, &duplicate);
     fill_genres_from(&scenario, &mut p, &cap, &ids, 1, MAX_GENRES - 1);
-    pg::add_genre(&mut p, &other_cap, &duplicate); // auth must beat duplicate/capacity
+    pg::add_genre(&mut p, &other_cap, &duplicate);
     abort
 }
 
@@ -294,7 +293,7 @@ fun remove_absent_aborts() {
     let genre = scenario.take_immutable_by_id<Genre>(id);
     let (mut p, cap) = new_party(scenario.ctx());
     pg::add_genre(&mut p, &cap, &genre);
-    pg::remove_genre(&mut p, &cap, fresh_id(scenario.ctx())); // a real id, but not tagged
+    pg::remove_genre(&mut p, &cap, fresh_id(scenario.ctx()));
     abort
 }
 
@@ -326,7 +325,7 @@ fun rejects_over_max() {
     assert_eq!(pg::genres(&p).length(), MAX_GENRES);
     assert_full_add_events(&ids, party_id);
     let last = scenario.take_immutable_by_id<Genre>(*ids.borrow(MAX_GENRES));
-    pg::add_genre(&mut p, &cap, &last); // the (MAX_GENRES + 1)-th aborts
+    pg::add_genre(&mut p, &cap, &last);
     abort
 }
 
@@ -447,9 +446,6 @@ fun add_genre_with_wrong_cap_on_full_set_aborts() {
     let (mut p, cap) = new_party(scenario.ctx());
     let (_other, other_cap) = new_party(scenario.ctx());
 
-    // Fill `p`'s genre set to MAX_GENRES so a capacity check, if it ran
-    // before authorization, would also abort here — proving the cap-gate
-    // really does run first, not just when there's room to add.
     MAX_GENRES.do!(|i| {
         let genre = scenario.take_immutable_by_id<Genre>(*ids.borrow(i));
         pg::add_genre(&mut p, &cap, &genre);

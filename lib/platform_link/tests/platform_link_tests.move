@@ -164,7 +164,6 @@ fun empty_payload_is_not_absence() {
     let set_events = event::events_by_type<pl::PlatformLinkSetEvent<vector<u8>>>();
     let (_, event_data) = pl::set_event_fields(&set_events[0]);
     assert_eq!(event_data, vector[]);
-    // 32-byte parent ID + 1-byte empty vector length.
     assert_eq!(bcs::to_bytes(&set_events[0]).length(), 33);
 
     let _ = pl::remove<vector<u8>>(&mut uid);
@@ -183,7 +182,6 @@ fun large_payload_is_emitted_in_full() {
     let set_events = event::events_by_type<pl::PlatformLinkSetEvent<BlobData>>();
     let (_, event_data) = pl::set_event_fields(&set_events[0]);
     assert_eq!(event_data.bytes.length(), 131072);
-    // 32-byte parent ID + 3-byte ULEB128 length + payload.
     assert_eq!(bcs::to_bytes(&set_events[0]).length(), 131107);
 
     pl::set(&mut uid, pl::new(BlobData { bytes: vector[8u8] }));

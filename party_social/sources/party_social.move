@@ -1,12 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Social-platform `platform_link` payloads: one `...Data` handle wrapper per network, so a
-/// party carries one independent link per network.
-///
-/// Only the native handle is stored; clients rebuild the profile URL (e.g.
-/// `x.com/{handle}`), so a platform reshaping its URLs needs no on-chain change. Handle
-/// format rules change over time and belong in the app layer.
 module party_social::party_social;
 
 // === Imports ===
@@ -21,23 +15,15 @@ const EHandleTooLong: u64 = 1;
 
 // === Structs ===
 
-/// An X (formerly Twitter) handle, without the leading `@`.
 public struct XData has copy, drop, store { handle: String }
 public struct InstagramData has copy, drop, store { handle: String }
-/// A Threads handle, without the leading `@`.
 public struct ThreadsData has copy, drop, store { handle: String }
-/// A TikTok handle, without the leading `@`.
 public struct TikTokData has copy, drop, store { handle: String }
-/// A YouTube handle or channel identifier.
 public struct YouTubeData has copy, drop, store { handle: String }
-/// A Discord server-invite code (the `{code}` in `discord.gg/{code}`).
 public struct DiscordData has copy, drop, store { handle: String }
-/// A Telegram username or channel (the `{name}` in `t.me/{name}`).
 public struct TelegramData has copy, drop, store { handle: String }
-/// A Reddit username (the `{name}` in `reddit.com/user/{name}`).
 public struct RedditData has copy, drop, store { handle: String }
 public struct TwitchData has copy, drop, store { handle: String }
-/// A Facebook page username or id.
 public struct FacebookData has copy, drop, store { handle: String }
 
 // === Method Aliases ===

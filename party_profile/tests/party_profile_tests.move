@@ -132,8 +132,6 @@ fun each_profile_component_change_emits() {
         vector[lc::new(b"en".to_string())],
     );
 
-    // Keep the earlier fields equal so each later component of the complete
-    // comparison is exercised independently.
     profile::set_profile(
         &mut p,
         &cap,
@@ -197,7 +195,7 @@ fun clear_profile_removes_it() {
     assert_eq!(cleared_events.length(), 2);
     assert_eq!(profile::cleared_event_fields(&cleared_events[1]), party_id);
 
-    profile::clear_profile(&mut p, &cap); // no-op
+    profile::clear_profile(&mut p, &cap);
     assert_eq!(event::events_by_type<profile::PartyProfileClearedEvent>().length(), 2);
     destroy(p);
     destroy(cap);
@@ -235,8 +233,8 @@ fun shared_party_profile_workflow() {
 fun stored_multibyte_values_and_event_language_order() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    let short = vector[0xC3u8, 0xA9u8].to_string(); // é
-    let long = vector[0xE2u8, 0x98u8, 0x83u8].to_string(); // ☃
+    let short = vector[0xC3u8, 0xA9u8].to_string();
+    let long = vector[0xE2u8, 0x98u8, 0x83u8].to_string();
     profile::set_profile(
         &mut p,
         &cap,
@@ -282,7 +280,6 @@ fun maximum_profile_is_emitted_in_full() {
         languages,
     );
     let set_events = event::events_by_type<profile::PartyProfileSetEvent>();
-    // 32 (ID) + (2 + 300) + (1 + 2 + 8192) + (1 + 1 + 2) + (1 + 10 * 3).
     assert_eq!(bcs::to_bytes(&set_events[0]).length(), 8564);
     let (_, bio_short, bio_long, _, _) = profile::set_event_fields(&set_events[0]);
     assert_eq!(bio_short, long_string(300));
@@ -309,7 +306,6 @@ fun maximum_profile_is_emitted_in_full() {
         option::some(cc::new(b"US".to_string())), languages);
     let tiny_events = event::events_by_type<profile::PartyProfileSetEvent>();
     assert_eq!(tiny_events.length(), 3);
-    // 32 (ID) + (1 + 4) + 1 + (1 + 1 + 2) + (1 + 10 * 3).
     assert_eq!(bcs::to_bytes(&tiny_events[2]).length(), 73);
     assert_eq!(profile::profile(&p).bio_short(), b"tiny".to_string());
 
@@ -358,8 +354,6 @@ fun views_are_silent() {
     destroy(cap);
 }
 
-/// The bound is inclusive, and it is on bytes rather than characters — 8 KB of
-/// bio is stored intact.
 #[test]
 fun bio_long_at_max_length_is_accepted() {
     let ctx = &mut tx_context::dummy();
@@ -384,7 +378,6 @@ fun bio_long_at_max_length_is_accepted() {
 fun rejects_bio_long_over_max_length() {
     let ctx = &mut tx_context::dummy();
     let (mut p, cap) = new_party(ctx);
-    // 8193 bytes — one past the bound.
     let bio = long_string(8193);
     profile::set_profile(
         &mut p,
@@ -493,8 +486,6 @@ fun set_profile_replace_with_wrong_cap_aborts() {
         option::none(),
         vector[],
     );
-    // Authorization must happen before reading or mutating the existing
-    // profile.
     profile::set_profile(
         &mut p,
         &other_cap,
@@ -520,7 +511,6 @@ fun set_profile_equal_with_wrong_cap_aborts() {
         vector[],
     );
 
-    // Equality must not bypass the existing PartyAdminCap authorization.
     profile::set_profile(
         &mut p,
         &other_cap,
@@ -563,8 +553,6 @@ fun validation_precedes_wrong_cap_for_empty_short_bio() {
     let ctx = &mut tx_context::dummy();
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
-    // Validation intentionally remains before `uid_mut`: the caller sees the
-    // local validation error even when the cap is unrelated.
     profile::set_profile(
         &mut p,
         &other_cap,

@@ -1,12 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Professional `platform_link` payloads: an artist's website, booking, management,
-/// publisher and label pages, EPK, and creator-support platforms (Patreon, Substack, Ko-fi).
-///
-/// A website, booking page or EPK has no reconstructable handle (the URL is the identity),
-/// so those store a full `url`. The creator platforms store just a handle, with the URL
-/// rebuilt client-side.
 module party_pro_link::party_pro_link;
 
 // === Imports ===
@@ -27,14 +21,10 @@ public struct BookingPageData has copy, drop, store { url: String }
 public struct ManagementPageData has copy, drop, store { url: String }
 public struct PublisherPageData has copy, drop, store { url: String }
 public struct LabelPageData has copy, drop, store { url: String }
-/// An electronic press kit.
 public struct EpkData has copy, drop, store { url: String }
 
-/// A Patreon handle (the `{name}` in `patreon.com/{name}`).
 public struct PatreonData has copy, drop, store { handle: String }
-/// A Substack subdomain (the `{name}` in `{name}.substack.com`).
 public struct SubstackData has copy, drop, store { subdomain: String }
-/// A Ko-fi handle (the `{name}` in `ko-fi.com/{name}`).
 public struct KofiData has copy, drop, store { handle: String }
 
 // === Method Aliases ===

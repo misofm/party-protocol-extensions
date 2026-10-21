@@ -40,7 +40,6 @@ fun set_link_equal_with_wrong_cap_aborts() {
     let (_other, other_cap) = new_party(ctx);
     links::set_link(&mut p, &cap, social::x(b"same".to_string()));
 
-    // Equality must not bypass the existing PartyAdminCap authorization.
     links::set_link(&mut p, &other_cap, social::x(b"same".to_string()));
     abort
 }

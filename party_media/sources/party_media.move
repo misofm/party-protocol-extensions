@@ -1,12 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Profile imagery for a party, stored as a single Walrus quilt.
-///
-/// All of a party's images (avatar, header, ...) live in one quilt, cheaper than one blob
-/// each; only its blob id is held on-chain. Which patch is the avatar or header is a client
-/// convention (quilt patch identifiers), never stored here. Equal replacements and absent
-/// clears are silent.
 module party_media::party_media;
 
 // === Imports ===
@@ -17,13 +11,11 @@ use miso_party::party::{Party, PartyAdminCap};
 
 // === Errors ===
 
-/// Zero is never a real Walrus blob id.
 const EZeroQuilt: u64 = 0;
 
 // === Structs ===
 
 public struct Media has store, drop {
-    /// Walrus quilt blob id.
     quilt: u256,
 }
 
@@ -42,7 +34,6 @@ public struct MediaClearedEvent has copy, drop {
 
 // === Public Functions ===
 
-/// The zero check runs before authorization.
 public fun set_media(party: &mut Party, cap: &PartyAdminCap, quilt: u256) {
     assert!(quilt != 0, EZeroQuilt);
     let party_id = object::id(party);
@@ -57,8 +48,6 @@ public fun set_media(party: &mut Party, cap: &PartyAdminCap, quilt: u256) {
     emit(MediaSetEvent { party_id, quilt });
 }
 
-/// Removes the party's media. Authorization happens before checking
-/// existence; an absent field is a silent no-op.
 public fun clear_media(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);

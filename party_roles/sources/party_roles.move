@@ -1,12 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// Artist-type roles for a party: what kind of act it is (artist, producer, DJ, band,
-/// label, ...). A party can hold several.
-///
-/// `ArtistRole` is a closed enum with a `Custom` escape hatch, mirroring
-/// `composition_party_role`. Duplicate, missing and over-max writes abort with
-/// `typed_set`'s error codes.
 module party_roles::party_roles;
 
 // === Imports ===
@@ -23,13 +17,11 @@ const ECustomNameTooLong: u64 = 1;
 
 // === Constants ===
 
-/// In bytes.
 const MAX_CUSTOM_NAME_LENGTH: u64 = 60;
 const MAX_ROLES: u64 = 12;
 
 // === Structs ===
 
-/// Stored as a `VecSet<ArtistRole>` through `typed_set`.
 public struct RolesKey() has copy, drop, store;
 
 // === Enums ===
@@ -43,7 +35,6 @@ public enum ArtistRole has copy, drop, store {
     Band,
     Label,
     Collective,
-    /// Prefer a canonical variant when one fits.
     Custom(String),
 }
 
@@ -97,14 +88,12 @@ public fun add_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
     emit(RoleAddedEvent { party_id, role });
 }
 
-/// The whole field is dropped when the last role leaves.
 public fun remove_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
     let party_id = object::id(party);
     set::remove(party.uid_mut(cap), RolesKey(), role);
     emit(RoleRemovedEvent { party_id, role });
 }
 
-/// No-op if none is set.
 public fun clear_roles(party: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(party);
     let uid = party.uid_mut(cap);

@@ -19,7 +19,7 @@ and absent clears are silent.
 - Value: `Profile { bio_short: String, bio_long: Option<String>,
   country: Option<CountryCode>, languages: vector<LanguageCode> }`.
 - Limits: `bio_short` 1–300 bytes (the only required field); `bio_long`
-  1–8192 bytes when present; up to 10 language tags, no duplicates.
+  1–8192 bytes when present (a storage backstop sized like `release_description`, not an editorial limit); up to 10 language tags, no duplicates.
 - `set_profile` replaces in place — the card is overwritten, never stacked.
   `clear_profile` removes the dynamic field entirely (storage reclaimed) and
   is a no-op when no profile is set.
@@ -33,7 +33,7 @@ with `EUnauthorized` at `miso_party::party`.
 
 | Function | Description | Aborts |
 |---|---|---|
-| `set_profile(party, cap, bio_short, bio_long, country, languages)` | Create or replace the whole profile card in one call; changed values emit the full card | validation errors below; wrong cap at `miso_party::party` |
+| `set_profile(party, cap, bio_short, bio_long, country, languages)` | Create or replace the whole profile card in one call; changed values emit the full card | validation errors below, all checked before authorization; wrong cap at `miso_party::party` |
 | `clear_profile(party, cap)` | Remove the profile and emit `PartyProfileClearedEvent`; no-op when none is set (no event then) | wrong cap at `miso_party::party` |
 
 ### Views

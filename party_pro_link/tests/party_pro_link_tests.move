@@ -49,7 +49,6 @@ fun rejects_empty_patreon() {
 
 #[test, expected_failure(abort_code = pro::EUrlTooLong)]
 fun rejects_overlong_url() {
-    // 2001 bytes — one over the shared backstop (platform_link::max_url_length(), 2000).
     let long = vector::tabulate!(2001, |_| 97u8).to_string();
     let _ = pro::website(long);
     abort
@@ -57,7 +56,6 @@ fun rejects_overlong_url() {
 
 #[test, expected_failure(abort_code = pro::EHandleTooLong)]
 fun rejects_overlong_handle() {
-    // 257 bytes — one over the shared backstop (platform_link::max_identifier_length(), 256).
     let long = vector::tabulate!(257, |_| 97u8).to_string();
     let _ = pro::patreon(long);
     abort

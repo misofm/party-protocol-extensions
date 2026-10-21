@@ -50,7 +50,6 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     assert_eq!(set_events.length(), 2);
     assert_eq!(media::quilt(&p).destroy_some(), 2u256);
 
-    // The full u256 range is accepted; the value is not interpreted here.
     media::set_media(&mut p, &cap, MAX_QUILT);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 3);
@@ -164,7 +163,6 @@ fun rejects_zero_quilt() {
     abort
 }
 
-/// The zero-quilt check runs before authorization.
 #[test, expected_failure(abort_code = media::EZeroQuilt)]
 fun zero_quilt_precedes_wrong_cap() {
     let ctx = &mut tx_context::dummy();
@@ -200,7 +198,6 @@ fun set_media_equal_with_wrong_cap_aborts() {
     let (_other, other_cap) = new_party(ctx);
     media::set_media(&mut p, &cap, 1u256);
 
-    // Equality must not bypass the existing PartyAdminCap authorization.
     media::set_media(&mut p, &other_cap, 1u256);
     abort
 }
