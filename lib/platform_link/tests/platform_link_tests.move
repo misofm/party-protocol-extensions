@@ -11,7 +11,6 @@ use std::unit_test::assert_eq;
 use sui::event;
 use platform_link::platform_link as pl;
 
-/// Stand-in payloads for exercising generic storage and typed event streams.
 public struct FooData has copy, drop, store { v: u64 }
 public struct BarData has copy, drop, store { v: u64 }
 public struct BlobData has copy, drop, store { bytes: vector<u8> }
@@ -48,8 +47,6 @@ fun set_get_borrow_remove_events_and_reads() {
     assert_eq!(event_parent_id, parent_id);
     assert_eq!(event_data.v, 1);
 
-    // Setting again replaces the existing link in place and emits a second
-    // event carrying the new payload.
     pl::set(&mut uid, pl::new(second));
     assert_eq!(pl::borrow<FooData>(&uid).data().v, 2);
     assert_eq!(pl::get<FooData>(&uid).destroy_some().data().v, 2);
@@ -66,7 +63,6 @@ fun set_get_borrow_remove_events_and_reads() {
     let removed_events = event::events_by_type<pl::PlatformLinkRemovedEvent<FooData>>();
     assert_eq!(pl::removed_event_fields(&removed_events[0]), parent_id);
 
-    // Views are read-only and do not add events.
     assert!(pl::get<FooData>(&uid).is_none());
     assert!(!pl::exists_<FooData>(&uid));
     assert_eq!(event::num_events(), 3);
@@ -110,8 +106,6 @@ fun equal_replacement_is_silent_but_change_emits() {
     assert_eq!(event::num_events(), 1);
     assert_eq!(pl::borrow<FooData>(&uid).data().v, 9);
 
-    // A complete payload change emits, even when the link type and BCS size
-    // remain the same.
     let changed = FooData { v: 10 };
     pl::set(&mut uid, pl::new(changed));
     assert_eq!(event::num_events(), 2);

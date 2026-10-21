@@ -4,13 +4,8 @@
 /// Free-form tags for a party: moods, scenes and descriptors (e.g. "ambient",
 /// "deconstructed club").
 ///
-/// The uncurated sibling to `party_genre`. Set mechanics (storage, duplicate
-/// and capacity checks, field reclamation) live in `typed_set`, whose error
-/// codes surface on duplicate, missing and over-max writes; this package keeps
-/// length validation, the capacity and the events. Tags are stored as given
-/// (exact dedupe). Writes are gated by the `PartyAdminCap`; views are
-/// permissionless. Add/remove events carry the tag; a populated clear carries
-/// the party ID.
+/// The uncurated sibling to `party_genre`. Tags are stored as given (exact dedupe).
+/// Duplicate, missing and over-max writes abort with `typed_set`'s error codes.
 module party_tags::party_tags;
 
 // === Imports ===
@@ -22,47 +17,38 @@ use typed_set::typed_set as set;
 
 // === Errors ===
 
-/// A tag must not be empty.
 const EEmptyTag: u64 = 0;
-/// A tag exceeds the maximum length.
 const ETagTooLong: u64 = 1;
 
 // === Constants ===
 
-/// Maximum length of a tag in bytes.
+/// In bytes.
 const MAX_TAG_LENGTH: u64 = 50;
-/// Maximum number of tags a party may carry.
 const MAX_TAGS: u64 = 30;
 
 // === Structs ===
 
-/// Dynamic-field key for a party's tag set, stored as a `VecSet<String>` and
-/// managed through `typed_set`.
+/// Stored as a `VecSet<String>` through `typed_set`.
 public struct TagsKey() has copy, drop, store;
 
 // === Events ===
 
-/// Emitted when a tag is added to a party.
 public struct TagAddedEvent has copy, drop {
     party_id: ID,
     tag: String,
 }
 
-/// Emitted when a tag is removed from a party.
 public struct TagRemovedEvent has copy, drop {
     party_id: ID,
     tag: String,
 }
 
-/// Emitted when a party's entire tag set is removed.
 public struct TagsClearedEvent has copy, drop {
     party_id: ID,
 }
 
 // === Public Functions ===
 
-/// Adds a tag to the party. Aborts if empty or too long here, and in
-/// `typed_set` if already present or the max is reached.
 public fun add_tag(self: &mut Party, cap: &PartyAdminCap, tag: String) {
     assert!(!tag.is_empty(), EEmptyTag);
     assert!(tag.length() <= MAX_TAG_LENGTH, ETagTooLong);
@@ -71,16 +57,15 @@ public fun add_tag(self: &mut Party, cap: &PartyAdminCap, tag: String) {
     emit(TagAddedEvent { party_id, tag });
 }
 
-/// Removes a tag from the party. Aborts in `typed_set` if not present. The
-/// whole field is dropped when the last tag leaves, so `has_tags` tracks
-/// "carries tags", not "has ever tagged".
+/// The whole field is dropped when the last tag leaves, so `has_tags` tracks "carries
+/// tags", not "has ever tagged".
 public fun remove_tag(self: &mut Party, cap: &PartyAdminCap, tag: String) {
     let party_id = object::id(self);
     set::remove(self.uid_mut(cap), TagsKey(), tag);
     emit(TagRemovedEvent { party_id, tag });
 }
 
-/// Removes the party's entire tag set. No-op if none is set.
+/// No-op if none is set.
 public fun clear_tags(self: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(self);
     let uid = self.uid_mut(cap);
@@ -92,36 +77,30 @@ public fun clear_tags(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-/// Whether the party carries any tags.
 public fun has_tags(self: &Party): bool {
     set::exists(self.uid(), TagsKey())
 }
 
-/// Whether the party carries the given tag.
 public fun has_tag(self: &Party, tag: String): bool {
     set::contains(self.uid(), TagsKey(), &tag)
 }
 
-/// The party's tags.
 public fun tags(self: &Party): vector<String> {
     set::keys(self.uid(), TagsKey())
 }
 
 // === Test Functions ===
 
-/// Test-only accessor for every `TagAddedEvent` field, in declaration order.
 #[test_only]
 public fun added_event_fields(event: &TagAddedEvent): (ID, String) {
     (event.party_id, event.tag)
 }
 
-/// Test-only accessor for every `TagRemovedEvent` field, in declaration order.
 #[test_only]
 public fun removed_event_fields(event: &TagRemovedEvent): (ID, String) {
     (event.party_id, event.tag)
 }
 
-/// Test-only accessor for every `TagsClearedEvent` field.
 #[test_only]
 public fun cleared_event_fields(event: &TagsClearedEvent): ID {
     event.party_id

@@ -1,16 +1,12 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Social-platform payloads for the `platform_link` primitive. Each network gets
-/// its own `…Data` type — a thin wrapper around the account's handle — so a party
-/// can carry one independent `PlatformLink<…Data>` per network (they never
-/// collide, and adding a network is a new type here, nothing elsewhere).
+/// Social-platform `platform_link` payloads: one `...Data` handle wrapper per network, so a
+/// party carries one independent link per network.
 ///
-/// Only the native handle is stored; the public profile URL is rebuilt
-/// client-side (e.g. `x.com/{handle}`, `discord.gg/{handle}`), so a platform
-/// reshaping its URLs needs no on-chain change. Validation is intentionally
-/// minimal — non-empty plus a generous max length as a storage-hygiene backstop;
-/// handle *format* rules change over time and belong in the app layer.
+/// Only the native handle is stored; clients rebuild the profile URL (e.g.
+/// `x.com/{handle}`), so a platform reshaping its URLs needs no on-chain change. Handle
+/// format rules change over time and belong in the app layer.
 module party_social::party_social;
 
 // === Imports ===
@@ -20,16 +16,13 @@ use platform_link::platform_link::{Self, PlatformLink};
 
 // === Errors ===
 
-/// The handle was empty.
 const EEmptyHandle: u64 = 0;
-/// The handle exceeded the maximum length.
 const EHandleTooLong: u64 = 1;
 
 // === Structs ===
 
 /// An X (formerly Twitter) handle, without the leading `@`.
 public struct XData has copy, drop, store { handle: String }
-/// An Instagram handle.
 public struct InstagramData has copy, drop, store { handle: String }
 /// A Threads handle, without the leading `@`.
 public struct ThreadsData has copy, drop, store { handle: String }
@@ -43,7 +36,6 @@ public struct DiscordData has copy, drop, store { handle: String }
 public struct TelegramData has copy, drop, store { handle: String }
 /// A Reddit username (the `{name}` in `reddit.com/user/{name}`).
 public struct RedditData has copy, drop, store { handle: String }
-/// A Twitch channel name.
 public struct TwitchData has copy, drop, store { handle: String }
 /// A Facebook page username or id.
 public struct FacebookData has copy, drop, store { handle: String }
@@ -63,61 +55,51 @@ public use fun facebook_handle as FacebookData.handle;
 
 // === Public Functions ===
 
-/// Builds an X link from a handle. Aborts if empty or too long.
 public fun x(handle: String): PlatformLink<XData> {
     validate_handle(&handle);
     platform_link::new(XData { handle })
 }
 
-/// Builds an Instagram link from a handle. Aborts if empty or too long.
 public fun instagram(handle: String): PlatformLink<InstagramData> {
     validate_handle(&handle);
     platform_link::new(InstagramData { handle })
 }
 
-/// Builds a Threads link from a handle. Aborts if empty or too long.
 public fun threads(handle: String): PlatformLink<ThreadsData> {
     validate_handle(&handle);
     platform_link::new(ThreadsData { handle })
 }
 
-/// Builds a TikTok link from a handle. Aborts if empty or too long.
 public fun tiktok(handle: String): PlatformLink<TikTokData> {
     validate_handle(&handle);
     platform_link::new(TikTokData { handle })
 }
 
-/// Builds a YouTube link from a handle or channel identifier. Aborts if empty or too long.
 public fun youtube(handle: String): PlatformLink<YouTubeData> {
     validate_handle(&handle);
     platform_link::new(YouTubeData { handle })
 }
 
-/// Builds a Discord link from a server-invite code. Aborts if empty or too long.
 public fun discord(handle: String): PlatformLink<DiscordData> {
     validate_handle(&handle);
     platform_link::new(DiscordData { handle })
 }
 
-/// Builds a Telegram link from a username or channel. Aborts if empty or too long.
 public fun telegram(handle: String): PlatformLink<TelegramData> {
     validate_handle(&handle);
     platform_link::new(TelegramData { handle })
 }
 
-/// Builds a Reddit link from a username. Aborts if empty or too long.
 public fun reddit(handle: String): PlatformLink<RedditData> {
     validate_handle(&handle);
     platform_link::new(RedditData { handle })
 }
 
-/// Builds a Twitch link from a channel name. Aborts if empty or too long.
 public fun twitch(handle: String): PlatformLink<TwitchData> {
     validate_handle(&handle);
     platform_link::new(TwitchData { handle })
 }
 
-/// Builds a Facebook link from a page username or id. Aborts if empty or too long.
 public fun facebook(handle: String): PlatformLink<FacebookData> {
     validate_handle(&handle);
     platform_link::new(FacebookData { handle })
@@ -125,52 +107,42 @@ public fun facebook(handle: String): PlatformLink<FacebookData> {
 
 // === View Functions ===
 
-/// The `handle` of a `XData`.
 public fun x_handle(self: &XData): String {
     self.handle
 }
 
-/// The `handle` of a `InstagramData`.
 public fun instagram_handle(self: &InstagramData): String {
     self.handle
 }
 
-/// The `handle` of a `ThreadsData`.
 public fun threads_handle(self: &ThreadsData): String {
     self.handle
 }
 
-/// The `handle` of a `TikTokData`.
 public fun tiktok_handle(self: &TikTokData): String {
     self.handle
 }
 
-/// The `handle` of a `YouTubeData`.
 public fun youtube_handle(self: &YouTubeData): String {
     self.handle
 }
 
-/// The `handle` of a `DiscordData`.
 public fun discord_handle(self: &DiscordData): String {
     self.handle
 }
 
-/// The `handle` of a `TelegramData`.
 public fun telegram_handle(self: &TelegramData): String {
     self.handle
 }
 
-/// The `handle` of a `RedditData`.
 public fun reddit_handle(self: &RedditData): String {
     self.handle
 }
 
-/// The `handle` of a `TwitchData`.
 public fun twitch_handle(self: &TwitchData): String {
     self.handle
 }
 
-/// The `handle` of a `FacebookData`.
 public fun facebook_handle(self: &FacebookData): String {
     self.handle
 }

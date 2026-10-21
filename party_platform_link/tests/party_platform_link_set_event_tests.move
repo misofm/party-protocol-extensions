@@ -25,7 +25,6 @@ fun insert_different_and_equal_replace_events() {
     let first = social::x(b"first".to_string());
     let second = social::x(b"second".to_string());
 
-    // Absent clear and absent view are silent.
     let before = event::num_events();
     links::clear_link<XData>(&mut p, &cap);
     assert_eq!(event::num_events(), before);
@@ -52,7 +51,6 @@ fun insert_different_and_equal_replace_events() {
     assert_eq!(event_data.handle(), b"second".to_string());
 
     links::set_link(&mut p, &cap, social::x(b"second".to_string()));
-    // Equal replacement is a no-op and emits nothing.
     assert_eq!(event::num_events(), before + 2);
     let sets = event::events_by_type<primitive::PlatformLinkSetEvent<XData>>();
     assert_eq!(sets.length(), 2);

@@ -17,7 +17,6 @@ use party_profile::party_profile as profile;
 
 const OWNER: address = @0xA;
 
-/// A string of `len` 'A' bytes, for exercising the length bounds.
 fun long_string(len: u64): std::string::String {
     let mut s = vector<u8>[];
     len.do!(|_| s.push_back(65));
@@ -71,8 +70,6 @@ fun replace_profile_in_place() {
     let (mut p, cap) = new_party(ctx);
     let party_id = object::id(&p);
 
-    // Start with every optional field populated, then replace with the
-    // minimal valid card. The whole card is replaced, not stacked.
     profile::set_profile(
         &mut p,
         &cap,
@@ -106,7 +103,6 @@ fun replace_profile_in_place() {
     assert!(card.country().is_none());
     assert_eq!(card.languages().length(), 0);
 
-    // An identical replacement is a no-op and emits nothing.
     profile::set_profile(
         &mut p,
         &cap,
@@ -188,7 +184,6 @@ fun clear_profile_removes_it() {
     assert_eq!(cleared_events.length(), 1);
     assert_eq!(profile::cleared_event_fields(&cleared_events[0]), party_id);
 
-    // A minimal profile is also a real attached field and its clear emits.
     profile::set_profile(
         &mut p,
         &cap,
@@ -474,7 +469,6 @@ fun set_profile_with_wrong_cap_aborts() {
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // A cap for a different party must not authorize writes to `p`.
     profile::set_profile(
         &mut p,
         &other_cap,

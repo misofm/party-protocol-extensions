@@ -1,16 +1,12 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Artist-type roles for a party: what kind of act it is (artist, producer,
-/// DJ, band, label, ...). A party can hold several.
+/// Artist-type roles for a party: what kind of act it is (artist, producer, DJ, band,
+/// label, ...). A party can hold several.
 ///
 /// `ArtistRole` is a closed enum with a `Custom` escape hatch, mirroring
-/// `composition_party_role`. Set mechanics (storage, duplicate and capacity
-/// checks, field reclamation) live in `typed_set`, whose error codes surface on
-/// duplicate, missing and over-max writes; this package keeps the role type,
-/// name validation, the capacity and the events. Writes are gated by the
-/// `PartyAdminCap`; views are permissionless. Add/remove events carry the role,
-/// a populated clear carries the party ID.
+/// `composition_party_role`. Duplicate, missing and over-max writes abort with
+/// `typed_set`'s error codes.
 module party_roles::party_roles;
 
 // === Imports ===
@@ -22,27 +18,22 @@ use typed_set::typed_set as set;
 
 // === Errors ===
 
-/// A custom role name must not be empty.
 const EEmptyCustomName: u64 = 0;
-/// A custom role name exceeds the maximum length.
 const ECustomNameTooLong: u64 = 1;
 
 // === Constants ===
 
-/// Maximum length of a custom role name in bytes.
+/// In bytes.
 const MAX_CUSTOM_NAME_LENGTH: u64 = 60;
-/// Maximum number of roles a party may hold.
 const MAX_ROLES: u64 = 12;
 
 // === Structs ===
 
-/// Dynamic-field key for a party's role set, stored as a `VecSet<ArtistRole>`
-/// and managed through `typed_set`.
+/// Stored as a `VecSet<ArtistRole>` through `typed_set`.
 public struct RolesKey() has copy, drop, store;
 
 // === Enums ===
 
-/// The kind of act a party represents. Closed enum + `Custom` escape hatch.
 public enum ArtistRole has copy, drop, store {
     Artist,
     Producer,
@@ -52,26 +43,22 @@ public enum ArtistRole has copy, drop, store {
     Band,
     Label,
     Collective,
-    /// A user-defined role not covered by a canonical variant (validated).
     /// Prefer a canonical variant when one fits.
     Custom(String),
 }
 
 // === Events ===
 
-/// Emitted when a role is added to a party.
 public struct RoleAddedEvent has copy, drop {
     party_id: ID,
     role: ArtistRole,
 }
 
-/// Emitted when a role is removed from a party.
 public struct RoleRemovedEvent has copy, drop {
     party_id: ID,
     role: ArtistRole,
 }
 
-/// Emitted when a party's entire role set is removed.
 public struct RolesClearedEvent has copy, drop {
     party_id: ID,
 }
@@ -82,54 +69,42 @@ public use fun role_name as ArtistRole.name;
 
 // === Public Functions ===
 
-/// The `Artist` role.
 public fun artist(): ArtistRole { ArtistRole::Artist }
 
-/// The `Producer` role.
 public fun producer(): ArtistRole { ArtistRole::Producer }
 
-/// The `Dj` role.
 public fun dj(): ArtistRole { ArtistRole::Dj }
 
-/// The `Composer` role.
 public fun composer(): ArtistRole { ArtistRole::Composer }
 
-/// The `Songwriter` role.
 public fun songwriter(): ArtistRole { ArtistRole::Songwriter }
 
-/// The `Band` role.
 public fun band(): ArtistRole { ArtistRole::Band }
 
-/// The `Label` role.
 public fun label(): ArtistRole { ArtistRole::Label }
 
-/// The `Collective` role.
 public fun collective(): ArtistRole { ArtistRole::Collective }
 
-/// Builds a custom role. Aborts if empty or too long.
 public fun custom(name: String): ArtistRole {
     assert!(!name.is_empty(), EEmptyCustomName);
     assert!(name.length() <= MAX_CUSTOM_NAME_LENGTH, ECustomNameTooLong);
     ArtistRole::Custom(name)
 }
 
-/// Adds a role to the party. Aborts in `typed_set` if already held or the max
-/// is reached.
 public fun add_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
     let party_id = object::id(self);
     set::add(self.uid_mut(cap), RolesKey(), role, MAX_ROLES);
     emit(RoleAddedEvent { party_id, role });
 }
 
-/// Removes a role from the party. Aborts in `typed_set` if not held. The whole
-/// field is dropped when the last role leaves.
+/// The whole field is dropped when the last role leaves.
 public fun remove_role(self: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
     let party_id = object::id(self);
     set::remove(self.uid_mut(cap), RolesKey(), role);
     emit(RoleRemovedEvent { party_id, role });
 }
 
-/// Removes the party's entire role set. No-op if none is set.
+/// No-op if none is set.
 public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
     let party_id = object::id(self);
     let uid = self.uid_mut(cap);
@@ -141,22 +116,18 @@ public fun clear_roles(self: &mut Party, cap: &PartyAdminCap) {
 
 // === View Functions ===
 
-/// Whether the party holds any roles.
 public fun has_roles(self: &Party): bool {
     set::exists(self.uid(), RolesKey())
 }
 
-/// Whether the party holds the given role.
 public fun has_role(self: &Party, role: ArtistRole): bool {
     set::contains(self.uid(), RolesKey(), &role)
 }
 
-/// The party's roles.
 public fun roles(self: &Party): vector<ArtistRole> {
     set::keys(self.uid(), RolesKey())
 }
 
-/// The canonical name of a role (its own string for `Custom`).
 public fun role_name(self: &ArtistRole): String {
     match (self) {
         ArtistRole::Artist => b"Artist".to_string(),
@@ -173,19 +144,16 @@ public fun role_name(self: &ArtistRole): String {
 
 // === Test Functions ===
 
-/// Test-only accessor for every `RoleAddedEvent` field, in declaration order.
 #[test_only]
 public fun added_event_fields(event: &RoleAddedEvent): (ID, ArtistRole) {
     (event.party_id, event.role)
 }
 
-/// Test-only accessor for every `RoleRemovedEvent` field, in declaration order.
 #[test_only]
 public fun removed_event_fields(event: &RoleRemovedEvent): (ID, ArtistRole) {
     (event.party_id, event.role)
 }
 
-/// Test-only accessor for every `RolesClearedEvent` field.
 #[test_only]
 public fun cleared_event_fields(event: &RolesClearedEvent): ID {
     event.party_id

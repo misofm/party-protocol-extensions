@@ -46,7 +46,6 @@ fun add_remove_and_query() {
     assert!(!tags::has_tag(&p, b"ambient".to_string()));
     assert_eq!(tags::tags(&p).length(), 1);
 
-    // Removing the last tag reclaims the field — no empty set lingers.
     tags::remove_tag(&mut p, &cap, b"deconstructed club".to_string());
     assert!(!tags::has_tags(&p));
 
@@ -133,7 +132,6 @@ fun add_tag_with_wrong_cap_aborts() {
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // A cap for a different party must not authorize writes to `p`.
     tags::add_tag(&mut p, &other_cap, b"ambient".to_string());
     abort
 }
@@ -152,7 +150,6 @@ fun add_tag_with_wrong_cap_on_full_set_aborts() {
         tags::add_tag(&mut p, &cap, tag);
     });
 
-    // A cap for a different party must abort on authorization, not capacity.
     tags::add_tag(&mut p, &other_cap, b"ambient".to_string());
     abort
 }
@@ -361,7 +358,6 @@ fun authorized_duplicate_on_full_set_aborts_as_duplicate() {
     abort
 }
 
-/// Removing from a party with no tag field aborts in `typed_set`.
 #[test, expected_failure(abort_code = typed_set::typed_set::EItemNotPresent)]
 fun remove_from_missing_field_aborts() {
     let ctx = &mut tx_context::dummy();

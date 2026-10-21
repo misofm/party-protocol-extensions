@@ -18,7 +18,6 @@ const MAX_GENRES: u64 = 20;
 
 // === Helpers ===
 
-/// Creates a genre in the permissionless registry and returns its derived id.
 fun create_genre(scenario: &Scenario, name: vector<u8>): ID {
     let mut registry = scenario.take_shared<GenreRegistry>();
     let id = g::derive_address(&registry, name.to_string()).to_id();
@@ -27,7 +26,6 @@ fun create_genre(scenario: &Scenario, name: vector<u8>): ID {
     id
 }
 
-/// Mints `count` distinct single-letter vocabulary entries for capacity tests.
 fun create_letter_genres(scenario: &Scenario, count: u64): vector<ID> {
     let mut registry = scenario.take_shared<GenreRegistry>();
     let mut ids = vector[];
@@ -60,7 +58,6 @@ fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
     party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
 }
 
-/// A fresh, unique id that is NOT a real genre (for negative cases).
 fun fresh_id(ctx: &mut TxContext): ID {
     let uid = object::new(ctx);
     let id = uid.to_inner();
@@ -151,7 +148,6 @@ fun add_remove_and_query() {
     assert!(pg::has_genre(&p, id2));
     assert_eq!(pg::genres(&p).length(), 3);
 
-    // Removing a middle entry preserves the insertion order around it.
     pg::remove_genre(&mut p, &cap, id2);
     assert!(pg::has_genre(&p, id1));
     assert!(!pg::has_genre(&p, id2));
@@ -159,15 +155,12 @@ fun add_remove_and_query() {
 
     assert_removed_event_at(0, 1, id2, party_id);
 
-    // Removing the remaining entries eventually reclaims the field — no empty
-    // set lingers.
     pg::remove_genre(&mut p, &cap, id1);
     pg::remove_genre(&mut p, &cap, id3);
     assert!(!pg::has_genres(&p));
     assert_removed_event_at(1, 3, id1, party_id);
     assert_removed_event_at(2, 3, id3, party_id);
 
-    // Re-adding after field deletion emits fresh add events.
     pg::add_genre(&mut p, &cap, &genre1);
     assert_added_event_at(3, 4, id1, b"HIP_HOP", party_id);
     pg::add_genre(&mut p, &cap, &genre2);
@@ -175,28 +168,23 @@ fun add_remove_and_query() {
     pg::add_genre(&mut p, &cap, &genre3);
     assert_added_event_at(5, 6, id3, b"TECHNO", party_id);
 
-    // Views over a populated set are silent and preserve complete order.
     assert_populated_views_silent(&p, vector[id1, id2, id3]);
 
-    // A populated clear emits exactly one event.
     pg::clear_genres(&mut p, &cap);
     assert!(!pg::has_genres(&p));
     assert_cleared_event_at(0, 1, party_id);
 
-    // Re-adding after clear emits one add event.
     pg::add_genre(&mut p, &cap, &genre1);
     assert_added_event_at(6, 7, id1, b"HIP_HOP", party_id);
     pg::clear_genres(&mut p, &cap);
     assert_cleared_event_at(1, 2, party_id);
 
-    // Clearing an absent set (including repeatedly) is authorized but silent.
     let events_before = event::num_events();
     pg::clear_genres(&mut p, &cap);
     pg::clear_genres(&mut p, &cap);
     assert_eq!(event::events_by_type<pg::GenresClearedEvent>().length(), 2);
     assert_eq!(event::num_events(), events_before);
 
-    // Read-only views do not emit events.
     let events_before = event::num_events();
     assert!(!pg::has_genres(&p));
     assert!(!pg::has_genre(&p, id1));
@@ -315,7 +303,6 @@ fun rejects_over_max() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
 
-    // Mint MAX_GENRES + 1 distinct genres (single-letter names A, B, …).
     scenario.next_tx(CREATOR);
     let mut ids = vector[];
     {
@@ -435,7 +422,6 @@ fun add_genre_with_wrong_cap_aborts() {
     let (mut p, _cap) = new_party(scenario.ctx());
     let (_other, other_cap) = new_party(scenario.ctx());
 
-    // A cap for a different party must not authorize writes to `p`.
     pg::add_genre(&mut p, &other_cap, &genre);
     abort
 }
@@ -445,7 +431,6 @@ fun add_genre_with_wrong_cap_on_full_set_aborts() {
     let mut scenario = ts::begin(CREATOR);
     g::init_for_testing(scenario.ctx());
 
-    // Mint MAX_GENRES + 1 distinct genres (single-letter names A, B, …).
     scenario.next_tx(CREATOR);
     let mut ids = vector[];
     {
@@ -471,7 +456,6 @@ fun add_genre_with_wrong_cap_on_full_set_aborts() {
         ts::return_immutable(genre);
     });
 
-    // A cap for a different party must abort on authorization, not capacity.
     let last = scenario.take_immutable_by_id<Genre>(*ids.borrow(MAX_GENRES));
     pg::add_genre(&mut p, &other_cap, &last);
     abort

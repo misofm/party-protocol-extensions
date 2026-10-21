@@ -24,7 +24,6 @@ fun bytes_of_len(len: u64, seed: u8): vector<u8> {
     bytes
 }
 
-/// A custom role named by the single byte `65 + i` ("A", "B", ...).
 fun custom_letter(i: u64): roles::ArtistRole {
     roles::custom(vector[(65 + i) as u8].to_string())
 }
@@ -57,7 +56,6 @@ fun add_remove_and_query() {
     assert!(roles::has_role(&p, roles::producer()));
     assert!(!roles::has_role(&p, roles::dj()));
     assert_eq!(roles::roles(&p).length(), 3);
-    // The canonical name maps to a stable token; DJ is uppercased.
     assert_eq!(roles::dj().name(), b"DJ".to_string());
     assert_eq!(roles::custom(b"Visual Artist".to_string()).name(), b"Visual Artist".to_string());
 
@@ -65,7 +63,6 @@ fun add_remove_and_query() {
     assert!(!roles::has_role(&p, roles::producer()));
     assert_eq!(roles::roles(&p).length(), 2);
 
-    // Removing the last roles reclaims the field — no empty set lingers.
     roles::remove_role(&mut p, &cap, roles::artist());
     roles::remove_role(&mut p, &cap, roles::custom(b"Visual Artist".to_string()));
     assert!(!roles::has_roles(&p));
@@ -154,7 +151,6 @@ fun add_role_with_wrong_cap_aborts() {
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // A cap for a different party must not authorize writes to `p`.
     roles::add_role(&mut p, &other_cap, roles::artist());
     abort
 }
@@ -179,7 +175,6 @@ fun add_role_with_wrong_cap_on_full_set_aborts() {
     roles::add_role(&mut p, &cap, roles::collective());
     4u64.do!(|i| roles::add_role(&mut p, &cap, custom_letter(i)));
 
-    // A cap for a different party must abort on authorization, not capacity.
     roles::add_role(&mut p, &other_cap, custom_letter(4));
     abort
 }

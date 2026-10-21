@@ -1,15 +1,11 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Music-platform payloads for the `platform_link` primitive — a party's links to
-/// its own artist/profile pages on streaming and music sites.
+/// Artist-level `platform_link` payloads for a party's pages on streaming and music sites.
 ///
-/// These are *artist-level* identifiers (an artist's Spotify id, a Bandcamp
-/// subdomain), distinct from the release-level (album/track) payloads the
-/// protocol's DSP-link extension uses. Only the native id is stored; the public
-/// URL is rebuilt client-side, so a platform reshaping its URLs needs no on-chain
-/// change. Validation is intentionally minimal — non-empty plus the shared
-/// max-length backstop (`platform_link::max_identifier_length()`).
+/// Distinct from the release-level (album/track) payloads of the DSP-link extension. Only
+/// the native id is stored; clients rebuild the URL, so a platform reshaping its URLs needs
+/// no on-chain change.
 module party_music::party_music;
 
 // === Imports ===
@@ -19,9 +15,7 @@ use platform_link::platform_link::{Self, PlatformLink};
 
 // === Errors ===
 
-/// The identifier was empty.
 const EEmptyId: u64 = 0;
-/// The id exceeded the maximum length.
 const EIdTooLong: u64 = 1;
 
 // === Structs ===
@@ -56,49 +50,41 @@ public use fun audiomack_username as AudiomackData.username;
 
 // === Public Functions ===
 
-/// Builds a Spotify artist link. Aborts if empty or too long.
 public fun spotify(artist_id: String): PlatformLink<SpotifyData> {
     validate_id(&artist_id);
     platform_link::new(SpotifyData { artist_id })
 }
 
-/// Builds a Bandcamp link from an artist subdomain. Aborts if empty or too long.
 public fun bandcamp(subdomain: String): PlatformLink<BandcampData> {
     validate_id(&subdomain);
     platform_link::new(BandcampData { subdomain })
 }
 
-/// Builds a SoundCloud link from a username. Aborts if empty or too long.
 public fun soundcloud(username: String): PlatformLink<SoundCloudData> {
     validate_id(&username);
     platform_link::new(SoundCloudData { username })
 }
 
-/// Builds an Apple Music artist link. Aborts if empty or too long.
 public fun apple_music(artist_id: String): PlatformLink<AppleMusicData> {
     validate_id(&artist_id);
     platform_link::new(AppleMusicData { artist_id })
 }
 
-/// Builds a Deezer artist link. Aborts if empty or too long.
 public fun deezer(artist_id: String): PlatformLink<DeezerData> {
     validate_id(&artist_id);
     platform_link::new(DeezerData { artist_id })
 }
 
-/// Builds a Tidal artist link. Aborts if empty or too long.
 public fun tidal(artist_id: String): PlatformLink<TidalData> {
     validate_id(&artist_id);
     platform_link::new(TidalData { artist_id })
 }
 
-/// Builds an Amazon Music artist link. Aborts if empty or too long.
 public fun amazon_music(artist_id: String): PlatformLink<AmazonMusicData> {
     validate_id(&artist_id);
     platform_link::new(AmazonMusicData { artist_id })
 }
 
-/// Builds an Audiomack link from a username. Aborts if empty or too long.
 public fun audiomack(username: String): PlatformLink<AudiomackData> {
     validate_id(&username);
     platform_link::new(AudiomackData { username })
@@ -106,42 +92,34 @@ public fun audiomack(username: String): PlatformLink<AudiomackData> {
 
 // === View Functions ===
 
-/// The `artist_id` of a `SpotifyData`.
 public fun spotify_artist_id(self: &SpotifyData): String {
     self.artist_id
 }
 
-/// The `subdomain` of a `BandcampData`.
 public fun bandcamp_subdomain(self: &BandcampData): String {
     self.subdomain
 }
 
-/// The `username` of a `SoundCloudData`.
 public fun soundcloud_username(self: &SoundCloudData): String {
     self.username
 }
 
-/// The `artist_id` of a `AppleMusicData`.
 public fun apple_music_artist_id(self: &AppleMusicData): String {
     self.artist_id
 }
 
-/// The `artist_id` of a `DeezerData`.
 public fun deezer_artist_id(self: &DeezerData): String {
     self.artist_id
 }
 
-/// The `artist_id` of a `TidalData`.
 public fun tidal_artist_id(self: &TidalData): String {
     self.artist_id
 }
 
-/// The `artist_id` of a `AmazonMusicData`.
 public fun amazon_music_artist_id(self: &AmazonMusicData): String {
     self.artist_id
 }
 
-/// The `username` of a `AudiomackData`.
 public fun audiomack_username(self: &AudiomackData): String {
     self.username
 }

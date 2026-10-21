@@ -42,12 +42,10 @@ fun set_read_replace_clear() {
     assert!(cta::has_ctas(&p));
     let list = cta::ctas(&p);
     assert_eq!(list.length(), 2);
-    // Position is priority — order is preserved.
     assert_eq!(list[0].label(), b"Tickets".to_string());
     assert_eq!(list[0].url(), b"https://dice.fm/artist".to_string());
     assert_eq!(list[1].label(), b"Merch".to_string());
 
-    // Replace the whole list.
     cta::set_ctas(&mut p, &cap, vector[
         cta::new_cta(b"Newsletter".to_string(), b"https://substack.com/artist".to_string()),
     ]);
@@ -102,7 +100,6 @@ fun stored_empty_and_identical_replacement_preserve_event_semantics() {
     let (mut p, cap) = new_party(ctx);
     let party_id = object::id(&p);
 
-    // An empty vector is still an attached list and emits a set event.
     cta::set_ctas(&mut p, &cap, vector[]);
     assert!(cta::has_ctas(&p));
     let set_events = event::events_by_type<cta::CtasSetEvent>();
@@ -112,21 +109,17 @@ fun stored_empty_and_identical_replacement_preserve_event_semantics() {
     assert!(event_ctas.is_empty());
     assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 33);
 
-    // Replacing an attached empty list with an identical empty list is a
-    // no-op and emits nothing.
     cta::set_ctas(&mut p, &cap, vector[]);
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
     assert!(cta::has_ctas(&p));
 
-    // Clearing the stored empty list emits a clear event.
     cta::clear_ctas(&mut p, &cap);
     assert!(!cta::has_ctas(&p));
     let cleared_events = event::events_by_type<cta::CtasClearedEvent>();
     assert_eq!(cleared_events.length(), 1);
     assert_eq!(cta::cleared_event_fields(&cleared_events[0]), party_id);
 
-    // A second clear is absent-state no-op: it must not emit.
     cta::clear_ctas(&mut p, &cap);
     assert_eq!(event::events_by_type<cta::CtasClearedEvent>().length(), 1);
     destroy(p);
@@ -186,7 +179,6 @@ fun maximum_content_is_emitted_in_full() {
     // 32 (ID) + 1 (len) + 20 * ((1 + 60) + (2 + 2000)).
     assert_eq!(std::bcs::to_bytes(&set_events[0]).length(), 41293);
 
-    // Replacing with an identical maximum list is a no-op and emits nothing.
     cta::set_ctas(&mut p, &cap, max_ctas());
     let set_events = event::events_by_type<cta::CtasSetEvent>();
     assert_eq!(set_events.length(), 1);
@@ -212,7 +204,6 @@ fun equal_cta_list_is_silent_but_component_change_emits() {
     ]);
     assert_eq!(event::events_by_type<cta::CtasSetEvent>().length(), 1);
 
-    // The label and count stay equal, but the URL is a real value change.
     cta::set_ctas(&mut p, &cap, vector[
         cta::new_cta(b"Listen".to_string(), b"https://two.example".to_string()),
     ]);
@@ -284,7 +275,6 @@ fun set_ctas_with_wrong_cap_aborts() {
     let (mut p, _cap) = new_party(ctx);
     let (_other, other_cap) = new_party(ctx);
 
-    // A cap for a different party must not authorize writes to `p`.
     cta::set_ctas(&mut p, &other_cap, vector[
         cta::new_cta(b"Tickets".to_string(), b"https://dice.fm/artist".to_string()),
     ]);

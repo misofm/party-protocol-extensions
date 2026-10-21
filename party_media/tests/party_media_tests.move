@@ -28,7 +28,6 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     assert!(!media::has_media(&p));
     assert!(media::quilt(&p).is_none());
 
-    // Insert 1.
     media::set_media(&mut p, &cap, 1u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 1);
@@ -38,7 +37,6 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     assert_eq!(quilt, 1u256);
     assert_eq!(media::quilt(&p).destroy_some(), 1u256);
 
-    // Replace 2: report the new value.
     media::set_media(&mut p, &cap, 2u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 2);
@@ -47,7 +45,6 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     assert_eq!(quilt, 2u256);
     assert_eq!(media::quilt(&p).destroy_some(), 2u256);
 
-    // Equal replacement is a no-op and emits nothing.
     media::set_media(&mut p, &cap, 2u256);
     let set_events = event::events_by_type<media::MediaSetEvent>();
     assert_eq!(set_events.length(), 2);
@@ -70,7 +67,6 @@ fun set_sequence_replace_equal_max_clear_reinsert() {
     assert!(!media::has_media(&p));
     assert!(media::quilt(&p).is_none());
 
-    // Clearing absent media is silent; a later insert emits again.
     media::clear_media(&mut p, &cap);
     assert_eq!(event::events_by_type<media::MediaClearedEvent>().length(), 1);
     media::set_media(&mut p, &cap, 3u256);
@@ -148,8 +144,6 @@ fun shared_party_cap_holder_and_reader() {
     ts::return_shared(p);
     scenario.return_to_sender(cap);
 
-    // A reader without the cap can inspect the shared party, but views do not
-    // emit or alter either event stream.
     scenario.next_tx(@0xB);
     let p = scenario.take_shared<party::Party>();
     let set_count = event::events_by_type<media::MediaSetEvent>().length();
