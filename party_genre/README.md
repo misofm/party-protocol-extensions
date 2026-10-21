@@ -66,12 +66,12 @@ surfaces from a dependency:
 ## Dependencies
 
 - [`miso_party`](https://github.com/misofm/party-protocol) at
-  `7b25b1aa4f41ff16e82315b321736042d0debf57` — `Party` authorization.
+  `9374c6eed64c907722ac1c93813c76dc7912b357` — `Party` authorization.
 - [`typed_set`](https://github.com/unconfirmedlabs/typed_set) at
   `b37474cbde166b7ddf8a3b615cd89f90182ace6f` — bounded-set storage,
   duplicate/capacity checks, and field reclamation.
 - [`genre`](https://github.com/misofm/genre) at
-  `b7234657fb1e7229fa2f766c8ecf00a522f800db` — the canonical shared genre
+  `c891068a038d53564baf3134276fcd42f68fb0c8` — the canonical shared genre
   vocabulary.
 
 All are exact Git pins; this manifest has no local-path dependencies.

@@ -26,7 +26,7 @@ borrowing, Action logic, or entry automation.
 
 | Dependency | Kind | Location | Mode |
 |---|---|---|---|
-| `miso_party` | Git pin | `https://github.com/misofm/party-protocol.git` @ `7b25b1aa4f41ff16e82315b321736042d0debf57` | production |
+| `miso_party` | Git pin | `https://github.com/misofm/party-protocol.git` @ `9374c6eed64c907722ac1c93813c76dc7912b357` | production |
 | `platform_link` | local-path | `../lib/platform_link` | production |
 | `party_social` | local-path | `../party_social` | test-only |
 

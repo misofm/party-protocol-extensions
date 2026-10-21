@@ -17,7 +17,7 @@ manifest_digest = "CD547CB1ACCE0880C835DAED2D8FFCB91D56C833AE5240D3AA5B918398263
 deps = { MoveStdlib = "MoveStdlib" }
 
 [pinned.mainnet.miso_party]
-source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "7b25b1aa4f41ff16e82315b321736042d0debf57" }
+source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "9374c6eed64c907722ac1c93813c76dc7912b357" }
 use_environment = "mainnet"
 manifest_digest = "E41BBD67BE8940D26C79D78B028477EF5B33BA217A1282C78ACB344CF8A5ECF6"
 deps = { std = "MoveStdlib", sui = "Sui" }
@@ -25,7 +25,7 @@ deps = { std = "MoveStdlib", sui = "Sui" }
 [pinned.mainnet.party_roles]
 source = { root = true }
 use_environment = "mainnet"
-manifest_digest = "ACB5AC8A89142F1F6E1225F76E2208ADFEBE9CB7B5D4065376559683A3037A05"
+manifest_digest = "7DF212117EC3F2AB05A8B8480CB2234CA2C079D2CCDB9AAED4813AA5F7CA5C0A"
 deps = { miso_party = "miso_party", std = "MoveStdlib", sui = "Sui", typed_set = "typed_set" }
 
 [pinned.mainnet.typed_set]
@@ -47,7 +47,7 @@ manifest_digest = "7AFB66695545775FBFBB2D3078ADFD084244D5002392E837FDE21D9EA1C6D
 deps = { MoveStdlib = "MoveStdlib" }
 
 [pinned.testnet.miso_party]
-source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "7b25b1aa4f41ff16e82315b321736042d0debf57" }
+source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "9374c6eed64c907722ac1c93813c76dc7912b357" }
 use_environment = "testnet"
 manifest_digest = "5745706258F61D6CE210904B3E6AE87A73CE9D31A6F93BE4718C442529332A87"
 deps = { std = "MoveStdlib", sui = "Sui" }
@@ -55,7 +55,7 @@ deps = { std = "MoveStdlib", sui = "Sui" }
 [pinned.testnet.party_roles]
 source = { root = true }
 use_environment = "testnet"
-manifest_digest = "CD67197BD4572C09D4425BEF89DB3A47DDE761A4B6B82918048579F3E562AD25"
+manifest_digest = "38D338D71DCEE375B397F7382822BA2A44B06A94A218E3CDEB0184923308ADA8"
 deps = { miso_party = "miso_party", std = "MoveStdlib", sui = "Sui", typed_set = "typed_set" }
 
 [pinned.testnet.typed_set]
