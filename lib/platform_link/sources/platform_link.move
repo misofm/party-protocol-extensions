@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// `PlatformLink<Data>`: a typed link to an entity on one external platform.
 ///

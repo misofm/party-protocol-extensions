@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// Artist-level `platform_link` payloads for a party's pages on streaming and music sites.
 ///

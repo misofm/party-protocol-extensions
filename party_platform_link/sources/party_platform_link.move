@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// Attaches `PlatformLink<Data>` records to a `Party`, one independent dynamic field per
 /// platform type, so adding one platform never rewrites another's.

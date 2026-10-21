@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// Professional `platform_link` payloads: an artist's website, booking, management,
 /// publisher and label pages, EPK, and creator-support platforms (Patreon, Substack, Ko-fi).

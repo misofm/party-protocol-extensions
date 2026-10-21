@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// Social-platform `platform_link` payloads: one `...Data` handle wrapper per network, so a
 /// party carries one independent link per network.

@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// Artist-type roles for a party: what kind of act it is (artist, producer, DJ, band,
 /// label, ...). A party can hold several.
