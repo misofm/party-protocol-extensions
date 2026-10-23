@@ -23,6 +23,9 @@ is far under it.
 
 | Package | Event | Fields (declaration order) |
 |---|---|---|
+| `party_group` | `GroupCreatedEvent` | `group_id: ID`, `party_id: ID` |
+| `party_group` | `GroupInviteCreatedEvent`, `GroupInviteDeclinedEvent`, `GroupInviteRevokedEvent` | `group_id: ID`, `member_id: ID` |
+| `party_group` | `GroupMembershipAcceptedEvent`, `GroupMembershipLeftEvent`, `GroupMembershipRemovedEvent` | `group_id: ID`, `member_id: ID` |
 | `lib/platform_link` | `PlatformLinkSetEvent<Data>` | `parent_id: ID`, `data: Data` |
 | `lib/platform_link` | `PlatformLinkRemovedEvent<phantom Data>` | `parent_id: ID` |
 | `party_cta` | `CtasSetEvent` | `party_id: ID`, `ctas: vector<Cta>` |
@@ -44,7 +47,9 @@ is far under it.
 `party_platform_link` declares no events: its writes delegate to
 `platform_link`, whose events carry the party's ID as `parent_id`. The pure
 payload packages `party_social`, `party_music` and `party_pro_link` declare
-and emit none. There are 17 declarations, all emitted.
+and emit none. There are 24 declarations, all emitted.
+
+`party_group` uses the extension Group object ID as `group_id`, not the owner Party ID. `GroupCreatedEvent` maps it to `party_id`. Its member IDs are Party IDs. Apply all deltas in transaction order; mutations may occur before `share` emits the creation mapping in the same transaction. Group membership and invitations are indexed from these events, without member-side fields on the Party.
 
 ## Derived values
 
@@ -59,6 +64,7 @@ strings and vectors carry a ULEB128 length; `Option` has a one-byte prefix.
 
 | Event | Maximum bytes | Derivation |
 |---|---:|---|
+| All `party_group` events | 64 | Two IDs; sizes do not depend on member or invitation counts |
 | `PlatformLinkSetEvent<Data>` | 2,034 | `32 + BCS(Data)`; party payloads hold one string of ≤256 B (handle/id: 290) or ≤2,000 B (URL: `32 + 2 + 2000`) |
 | `PlatformLinkRemovedEvent<Data>` | 32 | parent ID |
 | `CtasSetEvent` | 41,293 | `32 + 1 + 20 × ((1 + 60) + (2 + 2000))`; 33 when empty |

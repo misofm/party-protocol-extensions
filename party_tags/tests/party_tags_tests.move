@@ -16,7 +16,7 @@ use party_tags::party_tags as tags;
 const OWNER: address = @0xA;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
+    party::new(b"Test Artist".to_string(), ctx)
 }
 
 fun bytes_of_len(len: u64, seed: u8): vector<u8> {

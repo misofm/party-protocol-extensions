@@ -16,7 +16,7 @@ const OWNER: address = @0xA;
 const MAX_QUILT: u256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
+    party::new(b"Test Artist".to_string(), ctx)
 }
 
 #[test]

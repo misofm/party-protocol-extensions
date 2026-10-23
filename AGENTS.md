@@ -18,6 +18,7 @@ and [README.md](README.md) for the architecture and package overview.
 - `party_music`, `party_social`, and `party_pro_link` are pure payload
   packages. They define validated values for `party_platform_link`; they do
   not depend on or access `Party` or `PartyAdminCap`.
+- `party_group` is a relational extension: it owns optional shared `Group` state derived from a Party. Creation uses `uid_mut(cap)`; relation operations use `party::authorize(cap)` on the group owner or consenting member. It does not route value or custody capabilities.
 - Every package is self-contained: `Move.toml`, `sources/`, `tests/`,
   `README.md`.
 
@@ -36,12 +37,12 @@ and [README.md](README.md) for the architecture and package overview.
 3. **Keep it slim.** One slice, one key, the smallest API that covers the
    feature. No speculative configurability, no helper functions with one call
    site, no unused public surface.
-4. **Keep behavior out.** Extensions attach data to `Party`. Composable
+4. **Keep operational workflows out.** Profile extensions attach data to `Party`. The `party_group` relational extension owns optional membership and consent state; this is a data-model policy removed from core, not an Actions wrapper. Composable
    functionality that consumes a raw `PartyAdminCap` belongs in
    [`misofm/party-protocol-actions`](https://github.com/misofm/party-protocol-actions).
    Permissionless Vault automation belongs in an entry-only plugin that calls
    an Action. Do not put operational workflows in an extension.
-5. **Gate every state-attaching write with the cap.** Those writes take
+5. **Gate every state-attaching write with the cap.** Relational writes in `party_group` mutate its own `Group` and authorize the relevant Party through `party::authorize(cap)`; they must not request the other participant's cap or expose the Group UID. Those writes take
    `&PartyAdminCap` and go through `party::uid_mut(cap)` before mutation or
    event emission. Payload constructors are pure and have no cap parameter.
 6. **Bound everything stored.** Max lengths on strings, max counts on

@@ -44,11 +44,17 @@ platform values only; `party_platform_link` supplies their cap-gated storage.
 | ⚠️ Never raw on-chain | Permanent + public = privacy risk | booking/press/sync emails, phone, fees, payout/wallet addresses |
 
 Two structural facts that remove large parts of the wishlist:
-- **Member list is native** — core `Party` is `PartyKind::Group(VecSet<ID>)`.
+- **Membership is optional** — core `Party` is identity-only. `party_group` owns shared group relations outside the Party layout.
 - **Catalogue is derived** — the page renders the artist's releases by querying
   protocol objects; the party only *pins* selected ones (`party_featured`).
 
 ---
+
+## Group Membership — Implemented in This Source Generation
+
+| Package | Owns | Notes |
+|---|---|---|
+| `party_group` | A shared Group derived from a Party, pending invitations, direct memberships, and consent events | Optional policy; uses `typed_set`, permits any Party as a member except the group owner itself, and does not infer recursive membership |
 
 ## Phase 0 — Shipped
 
@@ -114,7 +120,7 @@ design below.
   sessions; release title/type/date/artwork/label/formats/edition/collect status;
   credits/provenance (songwriter/producer/engineer, ISRC/UPC, splits); collector
   & supporter & release counts; component availability (stems/score/lyrics).
-- **Native to core:** band/collective member list (`PartyKind::Group`).
+- **Optional relational extension:** band/collective membership, invitations, consent, and exit live in `party_group`, not core.
 - **Off-chain / indexer:** page theme/accent/layout/section order, hide-show
   toggles, featured-media order, profile completeness score, last-updated,
   moderation status, "verified-links-only" (derived from verification stamps).
