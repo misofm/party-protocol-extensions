@@ -32,7 +32,7 @@ with `EUnauthorized` at `miso_party::party`.
 |---|---|---|
 | `artist()`, `producer()`, `dj()`, `composer()`, `songwriter()`, `band()`, `label()`, `collective()` | A canonical role | — |
 | `custom(name)` | A user-defined role for anything the canonical variants do not cover — prefer a canonical variant when one fits | `EEmptyCustomName` (0) on an empty name; `ECustomNameTooLong` (1) over 60 bytes |
-| `role_name(&role)` (as `role.name()`) | The canonical name of a role; `Custom` returns its own string | — |
+| `name(&role)` (also `role.name()`) | The canonical name of a role; `Custom` returns its own string | — |
 
 ### Writes (cap-gated)
 
@@ -60,7 +60,7 @@ with `EUnauthorized` at `miso_party::party`.
 
 `role` is the enum value itself (variant name, plus the name for `Custom`), so
 canonical `Artist` and `Custom("Artist")` stay distinct. Display names
-(`Dj` renders as `DJ`) are the fixed mapping in `role_name`. A populated clear
+(`Dj` renders as `DJ`) are the fixed mapping in `name`. A populated clear
 emits one event; an absent clear is authorized but silent.
 
 ## Errors

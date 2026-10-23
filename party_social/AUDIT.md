@@ -1,5 +1,5 @@
 # Security Audit — `party_social`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_social`, module `party_social::party_social`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_social`, module `party_social::party_social`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Pure payload package: validated `Data` types wrapped as `PlatformLink<Data>` for `party_platform_link`. Ten social-network handles. See [README](README.md).

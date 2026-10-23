@@ -28,16 +28,16 @@ public struct FacebookData has copy, drop, store { handle: String }
 
 // === Method Aliases ===
 
-public use fun x_handle as XData.handle;
-public use fun instagram_handle as InstagramData.handle;
-public use fun threads_handle as ThreadsData.handle;
-public use fun tiktok_handle as TikTokData.handle;
-public use fun youtube_handle as YouTubeData.handle;
-public use fun discord_handle as DiscordData.handle;
-public use fun telegram_handle as TelegramData.handle;
-public use fun reddit_handle as RedditData.handle;
-public use fun twitch_handle as TwitchData.handle;
-public use fun facebook_handle as FacebookData.handle;
+public use fun x_data_handle as XData.handle;
+public use fun instagram_data_handle as InstagramData.handle;
+public use fun threads_data_handle as ThreadsData.handle;
+public use fun tik_tok_data_handle as TikTokData.handle;
+public use fun you_tube_data_handle as YouTubeData.handle;
+public use fun discord_data_handle as DiscordData.handle;
+public use fun telegram_data_handle as TelegramData.handle;
+public use fun reddit_data_handle as RedditData.handle;
+public use fun twitch_data_handle as TwitchData.handle;
+public use fun facebook_data_handle as FacebookData.handle;
 
 // === Public Functions ===
 
@@ -93,43 +93,43 @@ public fun facebook(handle: String): PlatformLink<FacebookData> {
 
 // === View Functions ===
 
-public fun x_handle(data: &XData): String {
+public fun x_data_handle(data: &XData): String {
     data.handle
 }
 
-public fun instagram_handle(data: &InstagramData): String {
+public fun instagram_data_handle(data: &InstagramData): String {
     data.handle
 }
 
-public fun threads_handle(data: &ThreadsData): String {
+public fun threads_data_handle(data: &ThreadsData): String {
     data.handle
 }
 
-public fun tiktok_handle(data: &TikTokData): String {
+public fun tik_tok_data_handle(data: &TikTokData): String {
     data.handle
 }
 
-public fun youtube_handle(data: &YouTubeData): String {
+public fun you_tube_data_handle(data: &YouTubeData): String {
     data.handle
 }
 
-public fun discord_handle(data: &DiscordData): String {
+public fun discord_data_handle(data: &DiscordData): String {
     data.handle
 }
 
-public fun telegram_handle(data: &TelegramData): String {
+public fun telegram_data_handle(data: &TelegramData): String {
     data.handle
 }
 
-public fun reddit_handle(data: &RedditData): String {
+public fun reddit_data_handle(data: &RedditData): String {
     data.handle
 }
 
-public fun twitch_handle(data: &TwitchData): String {
+public fun twitch_data_handle(data: &TwitchData): String {
     data.handle
 }
 
-public fun facebook_handle(data: &FacebookData): String {
+public fun facebook_data_handle(data: &FacebookData): String {
     data.handle
 }
 

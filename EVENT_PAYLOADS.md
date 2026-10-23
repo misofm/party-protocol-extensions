@@ -55,7 +55,7 @@ and emit none. There are 24 declarations, all emitted.
 
 - Set sizes and `has_*` flags follow from the add/remove/clear stream.
 - An `ArtistRole` display name is the fixed variant mapping in
-  `party_roles::role_name` (`Dj` → `DJ`); `Custom` carries its own name.
+  `party_roles::name` (`Dj` → `DJ`); `Custom` carries its own name.
 
 ## BCS payload bounds
 

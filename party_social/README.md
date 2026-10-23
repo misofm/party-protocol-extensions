@@ -71,7 +71,7 @@ Each takes `handle: String`, aborts `EEmptyHandle` (0) when empty and
 
 | Function | Returns |
 |---|---|
-| `x_handle(&XData)` … `facebook_handle(&FacebookData)` | The stored `handle`; one accessor per type, each aliased as `.handle()` on its type via `public use fun` |
+| `x_data_handle(&XData)` … `facebook_data_handle(&FacebookData)` | The stored `handle`; one accessor per type, each aliased as `.handle()` on its type via `public use fun` |
 
 Read a payload back with `platform_link::data` — `link.data().handle()`.
 

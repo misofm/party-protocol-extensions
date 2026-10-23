@@ -26,14 +26,14 @@ public struct AudiomackData has copy, drop, store { username: String }
 
 // === Method Aliases ===
 
-public use fun spotify_artist_id as SpotifyData.artist_id;
-public use fun bandcamp_subdomain as BandcampData.subdomain;
-public use fun soundcloud_username as SoundCloudData.username;
-public use fun apple_music_artist_id as AppleMusicData.artist_id;
-public use fun deezer_artist_id as DeezerData.artist_id;
-public use fun tidal_artist_id as TidalData.artist_id;
-public use fun amazon_music_artist_id as AmazonMusicData.artist_id;
-public use fun audiomack_username as AudiomackData.username;
+public use fun spotify_data_artist_id as SpotifyData.artist_id;
+public use fun bandcamp_data_subdomain as BandcampData.subdomain;
+public use fun sound_cloud_data_username as SoundCloudData.username;
+public use fun apple_music_data_artist_id as AppleMusicData.artist_id;
+public use fun deezer_data_artist_id as DeezerData.artist_id;
+public use fun tidal_data_artist_id as TidalData.artist_id;
+public use fun amazon_music_data_artist_id as AmazonMusicData.artist_id;
+public use fun audiomack_data_username as AudiomackData.username;
 
 // === Public Functions ===
 
@@ -79,35 +79,35 @@ public fun audiomack(username: String): PlatformLink<AudiomackData> {
 
 // === View Functions ===
 
-public fun spotify_artist_id(data: &SpotifyData): String {
+public fun spotify_data_artist_id(data: &SpotifyData): String {
     data.artist_id
 }
 
-public fun bandcamp_subdomain(data: &BandcampData): String {
+public fun bandcamp_data_subdomain(data: &BandcampData): String {
     data.subdomain
 }
 
-public fun soundcloud_username(data: &SoundCloudData): String {
+public fun sound_cloud_data_username(data: &SoundCloudData): String {
     data.username
 }
 
-public fun apple_music_artist_id(data: &AppleMusicData): String {
+public fun apple_music_data_artist_id(data: &AppleMusicData): String {
     data.artist_id
 }
 
-public fun deezer_artist_id(data: &DeezerData): String {
+public fun deezer_data_artist_id(data: &DeezerData): String {
     data.artist_id
 }
 
-public fun tidal_artist_id(data: &TidalData): String {
+public fun tidal_data_artist_id(data: &TidalData): String {
     data.artist_id
 }
 
-public fun amazon_music_artist_id(data: &AmazonMusicData): String {
+public fun amazon_music_data_artist_id(data: &AmazonMusicData): String {
     data.artist_id
 }
 
-public fun audiomack_username(data: &AudiomackData): String {
+public fun audiomack_data_username(data: &AudiomackData): String {
     data.username
 }
 

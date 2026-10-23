@@ -1,5 +1,5 @@
 # Security Audit — `party_pro_link`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_pro_link`, module `party_pro_link::party_pro_link`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_pro_link`, module `party_pro_link::party_pro_link`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Pure payload package: validated `Data` types wrapped as `PlatformLink<Data>` for `party_platform_link`. Six URL payloads and three handle payloads. See [README](README.md).

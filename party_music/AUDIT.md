@@ -1,5 +1,5 @@
 # Security Audit — `party_music`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_music`, module `party_music::party_music`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_music`, module `party_music::party_music`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Pure payload package: validated `Data` types wrapped as `PlatformLink<Data>` for `party_platform_link`. Eight music-platform artist identifiers. See [README](README.md).

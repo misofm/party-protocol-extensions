@@ -29,15 +29,15 @@ public struct KofiData has copy, drop, store { handle: String }
 
 // === Method Aliases ===
 
-public use fun website_url as WebsiteData.url;
-public use fun booking_url as BookingPageData.url;
-public use fun management_url as ManagementPageData.url;
-public use fun publisher_url as PublisherPageData.url;
-public use fun label_url as LabelPageData.url;
-public use fun epk_url as EpkData.url;
-public use fun patreon_handle as PatreonData.handle;
-public use fun substack_subdomain as SubstackData.subdomain;
-public use fun kofi_handle as KofiData.handle;
+public use fun website_data_url as WebsiteData.url;
+public use fun booking_page_data_url as BookingPageData.url;
+public use fun management_page_data_url as ManagementPageData.url;
+public use fun publisher_page_data_url as PublisherPageData.url;
+public use fun label_page_data_url as LabelPageData.url;
+public use fun epk_data_url as EpkData.url;
+public use fun patreon_data_handle as PatreonData.handle;
+public use fun substack_data_subdomain as SubstackData.subdomain;
+public use fun kofi_data_handle as KofiData.handle;
 
 // === Public Functions ===
 
@@ -88,39 +88,39 @@ public fun kofi(handle: String): PlatformLink<KofiData> {
 
 // === View Functions ===
 
-public fun website_url(data: &WebsiteData): String {
+public fun website_data_url(data: &WebsiteData): String {
     data.url
 }
 
-public fun booking_url(data: &BookingPageData): String {
+public fun booking_page_data_url(data: &BookingPageData): String {
     data.url
 }
 
-public fun management_url(data: &ManagementPageData): String {
+public fun management_page_data_url(data: &ManagementPageData): String {
     data.url
 }
 
-public fun publisher_url(data: &PublisherPageData): String {
+public fun publisher_page_data_url(data: &PublisherPageData): String {
     data.url
 }
 
-public fun label_url(data: &LabelPageData): String {
+public fun label_page_data_url(data: &LabelPageData): String {
     data.url
 }
 
-public fun epk_url(data: &EpkData): String {
+public fun epk_data_url(data: &EpkData): String {
     data.url
 }
 
-public fun patreon_handle(data: &PatreonData): String {
+public fun patreon_data_handle(data: &PatreonData): String {
     data.handle
 }
 
-public fun substack_subdomain(data: &SubstackData): String {
+public fun substack_data_subdomain(data: &SubstackData): String {
     data.subdomain
 }
 
-public fun kofi_handle(data: &KofiData): String {
+public fun kofi_data_handle(data: &KofiData): String {
     data.handle
 }
 

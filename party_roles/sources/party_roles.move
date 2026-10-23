@@ -54,10 +54,6 @@ public struct RolesClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Method Aliases ===
-
-public use fun role_name as ArtistRole.name;
-
 // === Public Functions ===
 
 public fun artist(): ArtistRole { ArtistRole::Artist }
@@ -117,7 +113,7 @@ public fun roles(party: &Party): vector<ArtistRole> {
     set::keys(party.uid(), RolesKey())
 }
 
-public fun role_name(self: &ArtistRole): String {
+public fun name(self: &ArtistRole): String {
     match (self) {
         ArtistRole::Artist => b"Artist".to_string(),
         ArtistRole::Producer => b"Producer".to_string(),

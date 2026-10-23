@@ -69,15 +69,15 @@ Declared with `public use fun`, so they call as methods on the payload —
 
 | Function | Method alias | Returns |
 |---|---|---|
-| `website_url(&WebsiteData)` | `.url()` | The stored URL |
-| `booking_url(&BookingPageData)` | `.url()` | The stored URL |
-| `management_url(&ManagementPageData)` | `.url()` | The stored URL |
-| `publisher_url(&PublisherPageData)` | `.url()` | The stored URL |
-| `label_url(&LabelPageData)` | `.url()` | The stored URL |
-| `epk_url(&EpkData)` | `.url()` | The stored URL |
-| `patreon_handle(&PatreonData)` | `.handle()` | The stored handle |
-| `substack_subdomain(&SubstackData)` | `.subdomain()` | The stored subdomain |
-| `kofi_handle(&KofiData)` | `.handle()` | The stored handle |
+| `website_data_url(&WebsiteData)` | `.url()` | The stored URL |
+| `booking_page_data_url(&BookingPageData)` | `.url()` | The stored URL |
+| `management_page_data_url(&ManagementPageData)` | `.url()` | The stored URL |
+| `publisher_page_data_url(&PublisherPageData)` | `.url()` | The stored URL |
+| `label_page_data_url(&LabelPageData)` | `.url()` | The stored URL |
+| `epk_data_url(&EpkData)` | `.url()` | The stored URL |
+| `patreon_data_handle(&PatreonData)` | `.handle()` | The stored handle |
+| `substack_data_subdomain(&SubstackData)` | `.subdomain()` | The stored subdomain |
+| `kofi_data_handle(&KofiData)` | `.handle()` | The stored handle |
 
 ## Events
 
