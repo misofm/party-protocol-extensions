@@ -36,7 +36,21 @@ public struct GenresClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Public Functions ===
+// === View Functions ===
+
+public fun has_genres(party: &Party): bool {
+    set::exists(party.uid(), GenresKey())
+}
+
+public fun has_genre(party: &Party, genre_id: ID): bool {
+    set::contains(party.uid(), GenresKey(), &genre_id)
+}
+
+public fun genres(party: &Party): vector<ID> {
+    set::keys(party.uid(), GenresKey())
+}
+
+// === Admin Functions ===
 
 public fun add_genre(party: &mut Party, cap: &PartyAdminCap, genre: &Genre) {
     let party_id = object::id(party);
@@ -58,20 +72,6 @@ public fun clear_genres(party: &mut Party, cap: &PartyAdminCap) {
         set::clear<GenresKey, ID>(uid, GenresKey());
         emit(GenresClearedEvent { party_id });
     }
-}
-
-// === View Functions ===
-
-public fun has_genres(party: &Party): bool {
-    set::exists(party.uid(), GenresKey())
-}
-
-public fun has_genre(party: &Party, genre_id: ID): bool {
-    set::contains(party.uid(), GenresKey(), &genre_id)
-}
-
-public fun genres(party: &Party): vector<ID> {
-    set::keys(party.uid(), GenresKey())
 }
 
 // === Test Functions ===

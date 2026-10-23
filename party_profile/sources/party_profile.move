@@ -54,7 +54,34 @@ public struct PartyProfileClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Public Functions ===
+// === View Functions ===
+
+public fun has_profile(party: &Party): bool {
+    df::exists(party.uid(), ProfileKey())
+}
+
+public fun profile(party: &Party): &Profile {
+    assert!(df::exists(party.uid(), ProfileKey()), ENoProfile);
+    df::borrow(party.uid(), ProfileKey())
+}
+
+public fun bio_short(self: &Profile): String {
+    self.bio_short
+}
+
+public fun bio_long(self: &Profile): Option<String> {
+    self.bio_long
+}
+
+public fun country(self: &Profile): Option<CountryCode> {
+    self.country
+}
+
+public fun languages(self: &Profile): vector<LanguageCode> {
+    self.languages
+}
+
+// === Admin Functions ===
 
 public fun set_profile(
     party: &mut Party,
@@ -98,33 +125,6 @@ public fun clear_profile(party: &mut Party, cap: &PartyAdminCap) {
         let _: Profile = df::remove(uid, ProfileKey());
         emit(PartyProfileClearedEvent { party_id });
     }
-}
-
-// === View Functions ===
-
-public fun has_profile(party: &Party): bool {
-    df::exists(party.uid(), ProfileKey())
-}
-
-public fun profile(party: &Party): &Profile {
-    assert!(df::exists(party.uid(), ProfileKey()), ENoProfile);
-    df::borrow(party.uid(), ProfileKey())
-}
-
-public fun bio_short(self: &Profile): String {
-    self.bio_short
-}
-
-public fun bio_long(self: &Profile): Option<String> {
-    self.bio_long
-}
-
-public fun country(self: &Profile): Option<CountryCode> {
-    self.country
-}
-
-public fun languages(self: &Profile): vector<LanguageCode> {
-    self.languages
 }
 
 // === Test Functions ===

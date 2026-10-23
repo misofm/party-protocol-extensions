@@ -1,5 +1,5 @@
 # Security Audit — `party_genre`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_genre`, module `party_genre::party_genre`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_genre`, module `party_genre::party_genre`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Stores up to 20 `genre::Genre` object IDs per party in a `typed_set` under `GenresKey`. Adding requires a `&Genre`; removal is by ID. See [README](README.md).
@@ -15,9 +15,9 @@ Stores up to 20 `genre::Genre` object IDs per party in a `typed_set` under `Genr
 **GEN-1 — Info — Accepted.** The vocabulary is open: `genre::genre::new` takes `&mut GenreRegistry` and no cap. Any sender can mint a genre with any `[A-Z_]` name of 1–64 bytes and tag a party with it (probe-verified). "Proven at write time" means only that the `Genre` exists in the registry, not that it was curated. Curation, if wanted, belongs off-chain or in a later catalog object.
 
 ## Checked, no finding
-- `add_genre` (`party_genre.move:41-46`): `typed_set` aborts `EDuplicateItem` (0) before `EMaxItemsExceeded` (2). The cap is checked first because `uid_mut` is evaluated before the `typed_set` call.
-- `remove_genre` (`:48-52`) aborts `EItemNotPresent` (1) when the ID is missing or no set exists. Removing the last item drops the field.
-- `clear_genres` (`:54-61`) emits only when a set exists.
+- `add_genre` (`party_genre.move:55-60`): `typed_set` aborts `EDuplicateItem` (0) before `EMaxItemsExceeded` (2). The cap is checked first because `uid_mut` is evaluated before the `typed_set` call.
+- `remove_genre` (`:62-66`) aborts `EItemNotPresent` (1) when the ID is missing or no set exists. Removing the last item drops the field.
+- `clear_genres` (`:68-75`) emits only when a set exists.
 - Events: an add carries `genre_id` and the immutable `genre_name` (at most 129 bytes); a remove carries `genre_id`; a clear carries `party_id`. One event per action.
 - Wrong cap on add, remove and clear (with or without a set present) aborts `EUnauthorized`.
 - Dependencies are exact pins: `miso_party` `8e59a81…`, `typed_set` `b37474c…`, `genre` `4c47bd1…`.

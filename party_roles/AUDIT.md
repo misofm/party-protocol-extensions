@@ -12,12 +12,12 @@ Stores up to 12 `ArtistRole` values (8 canonical variants plus `Custom(String)`)
 ## Findings
 None at Low or above.
 
-**ROL-1 — Info — Accepted.** Equality covers the whole enum value, so `Custom("Artist")` and `Artist` can be held together, and `Custom` names are case-sensitive. The README documents this. Clients render `name` (`:116-128`) as untrusted input.
+**ROL-1 — Info — Accepted.** Equality covers the whole enum value, so `Custom("Artist")` and `Artist` can be held together, and `Custom` names are case-sensitive. The README documents this. Clients render `name` (`:95-107`) as untrusted input.
 
 ## Checked, no finding
-- `add_role` (`:81-85`): the cap is checked first, then `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 12.
-- `remove_role` (`:87-91`) aborts `EItemNotPresent` (1) and drops the field after the last removal.
-- `clear_roles` (`:93-100`) emits only when present.
+- `add_role` (`:111-115`): the cap is checked first, then `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 12.
+- `remove_role` (`:117-121`) aborts `EItemNotPresent` (1) and drops the field after the last removal.
+- `clear_roles` (`:123-130`) emits only when present.
 - Events carry the full `ArtistRole` as an enum value; the maximum is 94 bytes (`tests/party_roles_tests.move:268,275`).
 - Wrong cap aborts on add, remove and clear.
 

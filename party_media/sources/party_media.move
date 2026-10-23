@@ -32,7 +32,18 @@ public struct MediaClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Public Functions ===
+// === View Functions ===
+
+public fun has_media(party: &Party): bool {
+    df::exists(party.uid(), MediaKey())
+}
+
+public fun quilt(party: &Party): Option<u256> {
+    if (!df::exists(party.uid(), MediaKey())) return option::none();
+    option::some(df::borrow<MediaKey, Media>(party.uid(), MediaKey()).quilt)
+}
+
+// === Admin Functions ===
 
 public fun set_media(party: &mut Party, cap: &PartyAdminCap, quilt: u256) {
     assert!(quilt != 0, EZeroQuilt);
@@ -55,17 +66,6 @@ public fun clear_media(party: &mut Party, cap: &PartyAdminCap) {
         let Media { quilt: _ } = df::remove(uid, MediaKey());
         emit(MediaClearedEvent { party_id });
     }
-}
-
-// === View Functions ===
-
-public fun has_media(party: &Party): bool {
-    df::exists(party.uid(), MediaKey())
-}
-
-public fun quilt(party: &Party): Option<u256> {
-    if (!df::exists(party.uid(), MediaKey())) return option::none();
-    option::some(df::borrow<MediaKey, Media>(party.uid(), MediaKey()).quilt)
 }
 
 // === Test Functions ===

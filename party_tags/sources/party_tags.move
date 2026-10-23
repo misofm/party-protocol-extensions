@@ -40,7 +40,21 @@ public struct TagsClearedEvent has copy, drop {
     party_id: ID,
 }
 
-// === Public Functions ===
+// === View Functions ===
+
+public fun has_tags(party: &Party): bool {
+    set::exists(party.uid(), TagsKey())
+}
+
+public fun has_tag(party: &Party, tag: String): bool {
+    set::contains(party.uid(), TagsKey(), &tag)
+}
+
+public fun tags(party: &Party): vector<String> {
+    set::keys(party.uid(), TagsKey())
+}
+
+// === Admin Functions ===
 
 public fun add_tag(party: &mut Party, cap: &PartyAdminCap, tag: String) {
     assert!(!tag.is_empty(), EEmptyTag);
@@ -63,20 +77,6 @@ public fun clear_tags(party: &mut Party, cap: &PartyAdminCap) {
         set::clear<TagsKey, String>(uid, TagsKey());
         emit(TagsClearedEvent { party_id });
     }
-}
-
-// === View Functions ===
-
-public fun has_tags(party: &Party): bool {
-    set::exists(party.uid(), TagsKey())
-}
-
-public fun has_tag(party: &Party, tag: String): bool {
-    set::contains(party.uid(), TagsKey(), &tag)
-}
-
-public fun tags(party: &Party): vector<String> {
-    set::keys(party.uid(), TagsKey())
 }
 
 // === Test Functions ===

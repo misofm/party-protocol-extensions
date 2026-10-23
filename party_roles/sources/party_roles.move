@@ -78,27 +78,6 @@ public fun custom(name: String): ArtistRole {
     ArtistRole::Custom(name)
 }
 
-public fun add_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(party);
-    set::add(party.uid_mut(cap), RolesKey(), role, MAX_ROLES);
-    emit(RoleAddedEvent { party_id, role });
-}
-
-public fun remove_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
-    let party_id = object::id(party);
-    set::remove(party.uid_mut(cap), RolesKey(), role);
-    emit(RoleRemovedEvent { party_id, role });
-}
-
-public fun clear_roles(party: &mut Party, cap: &PartyAdminCap) {
-    let party_id = object::id(party);
-    let uid = party.uid_mut(cap);
-    if (set::exists(uid, RolesKey())) {
-        set::clear<RolesKey, ArtistRole>(uid, RolesKey());
-        emit(RolesClearedEvent { party_id });
-    }
-}
-
 // === View Functions ===
 
 public fun has_roles(party: &Party): bool {
@@ -124,6 +103,29 @@ public fun name(self: &ArtistRole): String {
         ArtistRole::Label => b"Label".to_string(),
         ArtistRole::Collective => b"Collective".to_string(),
         ArtistRole::Custom(name) => *name,
+    }
+}
+
+// === Admin Functions ===
+
+public fun add_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
+    let party_id = object::id(party);
+    set::add(party.uid_mut(cap), RolesKey(), role, MAX_ROLES);
+    emit(RoleAddedEvent { party_id, role });
+}
+
+public fun remove_role(party: &mut Party, cap: &PartyAdminCap, role: ArtistRole) {
+    let party_id = object::id(party);
+    set::remove(party.uid_mut(cap), RolesKey(), role);
+    emit(RoleRemovedEvent { party_id, role });
+}
+
+public fun clear_roles(party: &mut Party, cap: &PartyAdminCap) {
+    let party_id = object::id(party);
+    let uid = party.uid_mut(cap);
+    if (set::exists(uid, RolesKey())) {
+        set::clear<RolesKey, ArtistRole>(uid, RolesKey());
+        emit(RolesClearedEvent { party_id });
     }
 }
 

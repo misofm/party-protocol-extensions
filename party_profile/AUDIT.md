@@ -12,14 +12,14 @@ Stores one replace-whole `Profile { bio_short, bio_long, country, languages }` p
 ## Findings
 None at Low or above.
 
-**PRO-1 — Info — Accepted.** All validation (`party_profile.move:67-78`) runs before authorization (`:83`), so invalid input with a wrong cap aborts with the validation code. The README documents this.
+**PRO-1 — Info — Accepted.** All validation (`party_profile.move:94-105`) runs before authorization (`:110`), so invalid input with a wrong cap aborts with the validation code. The README documents this.
 
-**PRO-2 — Info — Accepted.** `profile` (`:109-112`) returns `&Profile` and aborts `ENoProfile` (5) when unset. A function that returns a reference cannot be called from a PTB or a dev-inspect, so off-chain readers must read the dynamic field object.
+**PRO-2 — Info — Accepted.** `profile` (`:63-66`) returns `&Profile` and aborts `ENoProfile` (5) when unset. A function that returns a reference cannot be called from a PTB or a dev-inspect, so off-chain readers must read the dynamic field object.
 
 ## Checked, no finding
-- Bounds: `bio_short` 1–300 bytes (`:67-68`); `bio_long` 1–8192 bytes when present (`:69-72`); at most 10 languages with no duplicates (`:73-78`, O(n²) over n ≤ 10).
-- Equal replacement compares the whole card and is silent (`:86`). The event is built from the same values that are stored (`:81-82`).
-- `clear_profile` (`:94-101`) emits only when present. The largest set event is 8,564 bytes and is asserted in the tests.
+- Bounds: `bio_short` 1–300 bytes (`:94-95`); `bio_long` 1–8192 bytes when present (`:96-99`); at most 10 languages with no duplicates (`:100-105`, O(n²) over n ≤ 10).
+- Equal replacement compares the whole card and is silent (`:113`). The event is built from the same values that are stored (`:108-109`).
+- `clear_profile` (`:121-128`) emits only when present. The largest set event is 8,564 bytes and is asserted in the tests.
 - Wrong cap aborts on set and on clear (absent or present).
 - Error codes 0–6 are plain `u64` constants; all are reachable and tested.
 

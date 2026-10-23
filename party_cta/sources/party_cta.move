@@ -54,6 +54,27 @@ public fun new_cta(label: String, url: String): Cta {
     Cta { label, url }
 }
 
+// === View Functions ===
+
+public fun has_ctas(party: &Party): bool {
+    df::exists(party.uid(), CtasKey())
+}
+
+public fun ctas(party: &Party): vector<Cta> {
+    if (!df::exists(party.uid(), CtasKey())) return vector[];
+    *df::borrow<CtasKey, vector<Cta>>(party.uid(), CtasKey())
+}
+
+public fun label(self: &Cta): String {
+    self.label
+}
+
+public fun url(self: &Cta): String {
+    self.url
+}
+
+// === Admin Functions ===
+
 public fun set_ctas(party: &mut Party, cap: &PartyAdminCap, ctas: vector<Cta>) {
     assert!(ctas.length() <= MAX_CTAS, ETooManyCtas);
     let party_id = object::id(party);
@@ -75,25 +96,6 @@ public fun clear_ctas(party: &mut Party, cap: &PartyAdminCap) {
         let _: vector<Cta> = df::remove(uid, CtasKey());
         emit(CtasClearedEvent { party_id });
     }
-}
-
-// === View Functions ===
-
-public fun has_ctas(party: &Party): bool {
-    df::exists(party.uid(), CtasKey())
-}
-
-public fun ctas(party: &Party): vector<Cta> {
-    if (!df::exists(party.uid(), CtasKey())) return vector[];
-    *df::borrow<CtasKey, vector<Cta>>(party.uid(), CtasKey())
-}
-
-public fun label(self: &Cta): String {
-    self.label
-}
-
-public fun url(self: &Cta): String {
-    self.url
 }
 
 // === Test Functions ===

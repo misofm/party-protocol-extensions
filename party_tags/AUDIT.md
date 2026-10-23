@@ -1,5 +1,5 @@
 # Security Audit — `party_tags`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_tags`, module `party_tags::party_tags`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_tags`, module `party_tags::party_tags`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Stores up to 30 free-form tags (1–50 bytes each) per party in a `typed_set` under `TagsKey`. See [README](README.md).
@@ -12,12 +12,12 @@ Stores up to 30 free-form tags (1–50 bytes each) per party in a `typed_set` un
 ## Findings
 None at Low or above.
 
-**TAG-1 — Info — Accepted.** `add_tag` checks emptiness and length (`party_tags.move:46-47`) before authorization (`:49`). Dedupe is an exact byte match, with no case folding or trimming. The README documents both.
+**TAG-1 — Info — Accepted.** `add_tag` checks emptiness and length (`party_tags.move:60-61`) before authorization (`:63`). Dedupe is an exact byte match, with no case folding or trimming. The README documents both.
 
 ## Checked, no finding
-- `add_tag` (`:45-51`): after the cap check, `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 30.
-- `remove_tag` (`:53-57`) aborts `EItemNotPresent` (1) and reclaims the field after the last removal.
-- `clear_tags` (`:59-66`) emits only when present.
+- `add_tag` (`:59-65`): after the cap check, `typed_set` aborts `EDuplicateItem` (0) and then `EMaxItemsExceeded` (2) at 30.
+- `remove_tag` (`:67-71`) aborts `EItemNotPresent` (1) and reclaims the field after the last removal.
+- `clear_tags` (`:73-80`) emits only when present.
 - Events carry the tag; the maximum is 83 bytes (`tests/party_tags_tests.move:220`).
 - Wrong cap aborts on add, remove and clear.
 

@@ -74,17 +74,45 @@ public struct GroupMembershipRemovedEvent has copy, drop {
 
 // === Public Functions ===
 
+public fun share(self: Group) {
+    emit(GroupCreatedEvent { group_id: object::id(&self), party_id: self.party_id });
+    transfer::share_object(self);
+}
+
+// === View Functions ===
+
+public fun party_id(self: &Group): ID {
+    self.party_id
+}
+
+public fun has_group(party: &Party): bool {
+    derived_object::exists(party.uid(), GroupKey())
+}
+
+public fun is_member(self: &Group, member_id: ID): bool {
+    set::contains(&self.id, MembersKey(), &member_id)
+}
+
+public fun has_pending_invite(self: &Group, member_id: ID): bool {
+    set::contains(&self.id, InvitesKey(), &member_id)
+}
+
+public fun members(self: &Group): vector<ID> {
+    set::keys(&self.id, MembersKey())
+}
+
+public fun pending_invites(self: &Group): vector<ID> {
+    set::keys(&self.id, InvitesKey())
+}
+
+// === Admin Functions ===
+
 public fun new(party: &mut Party, cap: &PartyAdminCap): Group {
     let party_id = object::id(party);
     Group {
         id: claim(party.uid_mut(cap), GroupKey()),
         party_id,
     }
-}
-
-public fun share(self: Group) {
-    emit(GroupCreatedEvent { group_id: object::id(&self), party_id: self.party_id });
-    transfer::share_object(self);
 }
 
 public fun invite_party(
@@ -134,32 +162,6 @@ public fun remove_member(self: &mut Group, party: &Party, cap: &PartyAdminCap, m
     self.authorize_group(party, cap);
     set::remove(&mut self.id, MembersKey(), member_id);
     emit(GroupMembershipRemovedEvent { group_id: object::id(self), member_id });
-}
-
-// === View Functions ===
-
-public fun party_id(self: &Group): ID {
-    self.party_id
-}
-
-public fun has_group(party: &Party): bool {
-    derived_object::exists(party.uid(), GroupKey())
-}
-
-public fun is_member(self: &Group, member_id: ID): bool {
-    set::contains(&self.id, MembersKey(), &member_id)
-}
-
-public fun has_pending_invite(self: &Group, member_id: ID): bool {
-    set::contains(&self.id, InvitesKey(), &member_id)
-}
-
-public fun members(self: &Group): vector<ID> {
-    set::keys(&self.id, MembersKey())
-}
-
-public fun pending_invites(self: &Group): vector<ID> {
-    set::keys(&self.id, InvitesKey())
 }
 
 // === Private Functions ===

@@ -1,5 +1,5 @@
 # Security Audit — `party_cta`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_cta`, module `party_cta::party_cta`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_cta`, module `party_cta::party_cta`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Stores one ordered `vector<Cta { label, url }>` per party under `CtasKey`, replaced as a whole. See [README](README.md).
@@ -11,15 +11,15 @@ Stores one ordered `vector<Cta { label, url }>` per party under `CtasKey`, repla
 
 ## Findings
 
-**CTA-1 — Info — Accepted.** `set_ctas` checks the list length (`party_cta.move:58`) before authorization (`:60`), so an over-cap list with a wrong cap aborts `ETooManyCtas`, not `EUnauthorized` (probe-verified). The README documents this. No state changes either way.
+**CTA-1 — Info — Accepted.** `set_ctas` checks the list length (`party_cta.move:79`) before authorization (`:81`), so an over-cap list with a wrong cap aborts `ETooManyCtas`, not `EUnauthorized` (probe-verified). The README documents this. No state changes either way.
 
 **CTA-2 — Info — Accepted.** Duplicate entries are allowed, and URLs have no scheme check: `javascript:` URLs are accepted (probe). Clients must sanitize, as the README says.
 
 **CTA-3 — Info — Open.** The README says on-Miso actions "live in `party_featured`". No such package exists; the ROADMAP lists it as Phase 2. Fix: say it is planned.
 
 ## Checked, no finding
-- Bounds: label 1–60 bytes, URL 1–2000 bytes (`:50-53`), at most 20 entries (`:58`). The largest `CtasSetEvent` is 41,293 bytes, asserted in `tests/party_cta_tests.move:179`, far below the 250 KiB event limit.
-- Equal replacement returns before any event (`:63`). A first set emits, including an empty list. `clear_ctas` (`:71-78`) emits only when present.
+- Bounds: label 1–60 bytes, URL 1–2000 bytes (`:50-53`), at most 20 entries (`:79`). The largest `CtasSetEvent` is 41,293 bytes, asserted in `tests/party_cta_tests.move:179`, far below the 250 KiB event limit.
+- Equal replacement returns before any event (`:84`). A first set emits, including an empty list. `clear_ctas` (`:92-99`) emits only when present.
 - Wrong cap aborts on set, replace and clear (absent or present).
 - Abort codes 0–4 are plain `u64` constants, all reachable and tested.
 - No funds or objects. The field holds `copy + drop` values only and is reclaimed by `clear_ctas`.

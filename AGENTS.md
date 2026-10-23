@@ -143,8 +143,11 @@ bullets (Integrator notes). After any refactor, update those bullets.
 ## Move layout
 
 - Sections in order: Imports, Errors, Constants, Structs, Enums, Events,
-  Method Aliases, Public Functions, View Functions, Private Functions, Test
-  Functions (`// === Name ===`). Dynamic-field keys come last in Structs.
+  Method Aliases, Public Functions, View Functions, Admin Functions, Package
+  Functions, Private Functions, Test Functions (`// === Name ===`). Omit empty
+  sections. Dynamic-field keys come last in Structs.
+- Cap-gated functions go under Admin Functions; `init`, when present, is the
+  first Public Function; `public(package)` functions go under Package Functions.
 - Imports in one block ordered std, sui, external packages, this package.
 - Errors are plain `u64` constants numbered from 0 in declaration order.
 - Lines stay within 100 columns.

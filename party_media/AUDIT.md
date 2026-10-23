@@ -1,5 +1,5 @@
 # Security Audit — `party_media`
-Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_media`, module `party_media::party_media`.
+Audited at `067a532492f3db79a100883e994f54731cacc719` (2026-10-21). Scope: `party_media`, module `party_media::party_media`. Later commits only apply naming and ordering standards; line references are to the current code.
 
 ## What it does
 Stores one nonzero Walrus quilt blob ID (`u256`) per party under `MediaKey`. See [README](README.md).
@@ -12,13 +12,13 @@ Stores one nonzero Walrus quilt blob ID (`u256`) per party under `MediaKey`. See
 ## Findings
 None at Low or above.
 
-**MED-1 — Info — Accepted.** `set_media` rejects a zero quilt (`party_media.move:38`) before authorization, so a zero quilt with a wrong cap aborts `EZeroQuilt`. The README documents this. No other format check: any nonzero `u256` is accepted, and it is not checked to be an existing Walrus blob.
+**MED-1 — Info — Accepted.** `set_media` rejects a zero quilt (`party_media.move:49`) before authorization, so a zero quilt with a wrong cap aborts `EZeroQuilt`. The README documents this. No other format check: any nonzero `u256` is accepted, and it is not checked to be an existing Walrus blob.
 
 ## Checked, no finding
-- `set_media` (`:37-49`) inserts or replaces in place and is silent on an equal value (`:43`). `clear_media` (`:51-58`) is silent when absent.
+- `set_media` (`:48-60`) inserts or replaces in place and is silent on an equal value (`:54`). `clear_media` (`:62-69`) is silent when absent.
 - Events: `MediaSetEvent` is 64 bytes and `MediaClearedEvent` 32 bytes (`tests/party_media_tests.move:34,64`).
 - Wrong cap aborts on set (absent, present or equal value) and on clear (absent or present).
-- `quilt` (`:66-69`) returns `Option`, so the view never aborts.
+- `quilt` (`:41-44`) returns `Option`, so the view never aborts.
 
 ## Verification
 - `sui move test --coverage` (sui 1.82.1): 11/11 pass; module coverage 100.00%.
