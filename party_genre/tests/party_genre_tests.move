@@ -55,7 +55,7 @@ fun fill_genres_from(
 }
 
 fun new_party(ctx: &mut TxContext): (party::Party, party::PartyAdminCap) {
-    party::new(party::new_individual_kind(), b"Test Artist".to_string(), ctx)
+    party::new(b"Test Artist".to_string(), ctx)
 }
 
 fun fresh_id(ctx: &mut TxContext): ID {

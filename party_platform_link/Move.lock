@@ -17,7 +17,7 @@ manifest_digest = "CD547CB1ACCE0880C835DAED2D8FFCB91D56C833AE5240D3AA5B918398263
 deps = { MoveStdlib = "MoveStdlib" }
 
 [pinned.mainnet.miso_party]
-source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "8e59a815dc1129166b66a76d568edb8822859255" }
+source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "c7c457d40bb96db9044cea55fd71532e192ab6b8" }
 use_environment = "mainnet"
 manifest_digest = "E41BBD67BE8940D26C79D78B028477EF5B33BA217A1282C78ACB344CF8A5ECF6"
 deps = { std = "MoveStdlib", sui = "Sui" }
@@ -25,7 +25,7 @@ deps = { std = "MoveStdlib", sui = "Sui" }
 [pinned.mainnet.party_platform_link]
 source = { root = true }
 use_environment = "mainnet"
-manifest_digest = "536CEA863E2426E3D89F452AC215571CAD72D0F50A4EF6461CE13FB533CD155F"
+manifest_digest = "68065A6AE61BFC8C7A7753EC2D5ADE39DCF658315E0BE7ED6134A4C1C4633909"
 deps = { miso_party = "miso_party", party_social = "party_social", platform_link = "platform_link", std = "MoveStdlib", sui = "Sui" }
 
 [pinned.mainnet.party_social]
@@ -53,7 +53,7 @@ manifest_digest = "7AFB66695545775FBFBB2D3078ADFD084244D5002392E837FDE21D9EA1C6D
 deps = { MoveStdlib = "MoveStdlib" }
 
 [pinned.testnet.miso_party]
-source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "8e59a815dc1129166b66a76d568edb8822859255" }
+source = { git = "https://github.com/misofm/party-protocol.git", subdir = ".", rev = "c7c457d40bb96db9044cea55fd71532e192ab6b8" }
 use_environment = "testnet"
 manifest_digest = "5745706258F61D6CE210904B3E6AE87A73CE9D31A6F93BE4718C442529332A87"
 deps = { std = "MoveStdlib", sui = "Sui" }
@@ -61,7 +61,7 @@ deps = { std = "MoveStdlib", sui = "Sui" }
 [pinned.testnet.party_platform_link]
 source = { root = true }
 use_environment = "testnet"
-manifest_digest = "00CA1AEA1D61ECBB422CA754B3C96CF21D224B151AC361EB6C285B581612C3C5"
+manifest_digest = "AF2BB050B52A31008620E2737315FEF203958226A96895CC4A12A189D67C8D84"
 deps = { miso_party = "miso_party", party_social = "party_social", platform_link = "platform_link", std = "MoveStdlib", sui = "Sui" }
 
 [pinned.testnet.party_social]

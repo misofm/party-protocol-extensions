@@ -1,7 +1,7 @@
 # Miso Party Extensions
 
 Artist/entity profile pages on Sui, built as small, independent Move packages.
-The state-attaching **extensions** each add one coherent slice to a core
+The state-attaching profile **extensions** each add one coherent slice to a core
 [`miso_party::party::Party`](https://github.com/misofm/party-protocol) as a
 dynamic field — bio, roles, tags, links, imagery, and CTAs. This repository
 also contains pure platform payload packages (`party_music`, `party_social`,
@@ -15,6 +15,8 @@ for documenting an extension — required reading before adding one — lives in
 [AGENTS.md](AGENTS.md).
 
 ## Architecture
+
+- **Optional group relations.** `party_group` owns a derived, shared `Group` object per Party. Its membership and invitation storage, bounds, consent rules, and events are outside core. It authorizes group and member operations through the matching Party capabilities without mutating either Party.
 
 - **One slice per state-attaching extension.** Each such package owns its
   dynamic-field key(s) and values on the party's `UID`. Distinct key types
@@ -53,6 +55,12 @@ for documenting an extension — required reading before adding one — lives in
 | [`party_media`](party_media) | Imagery: one Walrus quilt blob id (avatar/header are quilt patches, a client convention) |
 | [`party_cta`](party_cta) | Ordered external call-to-action links (`{ label, url }`, position is priority) |
 
+### Relational extensions
+
+| Package | Owns |
+|---|---|
+| [`party_group`](party_group) | Optional shared group state, bounded invitations and members, consent, exit, and removal |
+
 ### Pure payload packages (no `Party` or cap access)
 
 | Package | Owns |
@@ -61,7 +69,7 @@ for documenting an extension — required reading before adding one — lives in
 | [`party_music`](party_music) | Music-platform artist payloads: Spotify, Bandcamp, SoundCloud, Apple Music, Deezer, Tidal, Amazon, Audiomack |
 | [`party_pro_link`](party_pro_link) | Pro/industry payloads: website, booking/management/publisher/label pages, EPK; Patreon, Substack, Ko-fi |
 
-Operational Party workflows are not profile extensions. Composable raw-cap
+Group relations describe an optional relationship model. Payment, custody, and other operational Party workflows are not profile extensions. Composable raw-cap
 operations live in **Actions** packages; Vault-based, permissionless automation
 belongs in separate entry-only plugin packages that call those Actions. The
 current custody-agnostic inbox and accumulator Actions live in
@@ -116,3 +124,15 @@ sui move test
 [Functional Source License 1.1, ALv2 Future License](./LICENSE.md)
 (FSL-1.1-ALv2). Any use except a Competing Use is permitted, and each version
 becomes Apache-2.0 two years after its release.
+
+## Group-Extension Source Generation
+
+State-attaching packages now pin the identity-only Party core at
+`c7c457d40bb96db9044cea55fd71532e192ab6b8`. Their tests use `party::new(name, ctx)`.
+The constructor no longer takes `PartyKind`, and `PartyCreatedEvent` no longer
+contains `is_group`. Existing deployed package records are retained unchanged;
+this branch does not publish a new on-chain generation.
+
+Group applications use the optional [`party_group`](party_group) package. Its
+shared `Group` owns the canonical direct-member and pending-invite sets for that
+extension generation. A group need not impose its storage model on core Party.
