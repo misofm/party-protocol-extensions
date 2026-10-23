@@ -6,11 +6,11 @@ An indexer that sees every event of these packages, plus the transaction
 envelope, can build and keep current its index of every party field they
 manage without reading object storage or making an RPC call:
 
-- **Set** events carry the full new value (bios, CTA lists, link payloads).
+- **Set** events carry the full new value (bios, CTA lists).
 - **Add/remove** events carry the full entry (tag, `ArtistRole`, genre ID and
   name).
-- **Clear/remove-field** events carry only the key (`party_id`, and the `Data`
-  type argument for platform links); the indexer already holds the old value.
+- **Clear/remove-field** events carry only the key (`party_id`); the indexer
+  already holds the old value.
 - Equal-value replacements and absent clears emit nothing; a first attachment,
   including an explicitly empty value, emits.
 - One event per action. IDs use `ID`; enums are emitted as values, never
@@ -26,8 +26,6 @@ is far under it.
 | `party_group` | `GroupCreatedEvent` | `group_id: ID`, `party_id: ID` |
 | `party_group` | `GroupInviteCreatedEvent`, `GroupInviteDeclinedEvent`, `GroupInviteRevokedEvent` | `group_id: ID`, `member_id: ID` |
 | `party_group` | `GroupMembershipAcceptedEvent`, `GroupMembershipLeftEvent`, `GroupMembershipRemovedEvent` | `group_id: ID`, `member_id: ID` |
-| `lib/platform_link` | `PlatformLinkSetEvent<Data>` | `parent_id: ID`, `data: Data` |
-| `lib/platform_link` | `PlatformLinkRemovedEvent<phantom Data>` | `parent_id: ID` |
 | `party_cta` | `CtasSetEvent` | `party_id: ID`, `ctas: vector<Cta>` |
 | `party_cta` | `CtasClearedEvent` | `party_id: ID` |
 | `party_genre` | `GenreAddedEvent` | `party_id: ID`, `genre_id: ID`, `genre_name: String` |
@@ -44,10 +42,7 @@ is far under it.
 | `party_tags` | `TagRemovedEvent` | `party_id: ID`, `tag: String` |
 | `party_tags` | `TagsClearedEvent` | `party_id: ID` |
 
-`party_platform_link` declares no events: its writes delegate to
-`platform_link`, whose events carry the party's ID as `parent_id`. The pure
-payload packages `party_social`, `party_music` and `party_pro_link` declare
-and emit none. There are 24 declarations, all emitted.
+There are 22 declarations, all emitted.
 
 `party_group` uses the extension Group object ID as `group_id`, not the owner Party ID. `GroupCreatedEvent` maps it to `party_id`. Its member IDs are Party IDs. Apply all deltas in transaction order; mutations may occur before `share` emits the creation mapping in the same transaction. Group membership and invitations are indexed from these events, without member-side fields on the Party.
 
@@ -65,8 +60,6 @@ strings and vectors carry a ULEB128 length; `Option` has a one-byte prefix.
 | Event | Maximum bytes | Derivation |
 |---|---:|---|
 | All `party_group` events | 64 | Two IDs; sizes do not depend on member or invitation counts |
-| `PlatformLinkSetEvent<Data>` | 2,034 | `32 + BCS(Data)`; party payloads hold one string of ≤256 B (handle/id: 290) or ≤2,000 B (URL: `32 + 2 + 2000`) |
-| `PlatformLinkRemovedEvent<Data>` | 32 | parent ID |
 | `CtasSetEvent` | 41,293 | `32 + 1 + 20 × ((1 + 60) + (2 + 2000))`; 33 when empty |
 | `CtasClearedEvent` | 32 | party ID |
 | `GenreAddedEvent` | 129 | `64 + 1 + 64` (genre names ≤64 B) |

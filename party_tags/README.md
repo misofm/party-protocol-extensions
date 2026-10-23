@@ -87,8 +87,7 @@ Both are exact Git pins; this manifest has no local-path dependencies.
   are two different tags. Case-folding and trimming for search or display
   happen client-side; the chain will not normalize for you.
 - **Untrusted input.** A tag is free-form artist input, bounded only at 50
-  bytes — sanitize before rendering, same convention as the handles stored by
-  the platform-link payload packages.
+  bytes — sanitize before rendering.
 - **Events carry the tag.** An indexer maintains the ordered set from
   `TagAddedEvent` / `TagRemovedEvent` alone; on `TagsClearedEvent`, drop the
   whole set.

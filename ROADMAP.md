@@ -3,9 +3,8 @@
 Artist/entity profile pages are built by attaching stateful **extensions** to
 the core [`miso_party::party::Party`](https://github.com/misofm/party-protocol) via
 dynamic fields. Each state-attaching extension owns one coherent slice, gates
-writes with the party's `PartyAdminCap`, and ships independently. Pure payload
-packages (`party_music`, `party_social`, `party_pro_link`) define validated
-platform values only; `party_platform_link` supplies their cap-gated storage.
+writes with the party's `PartyAdminCap`, and ships independently. Platform
+links (social, music and pro profiles) were removed pending a redesign.
 
 ## Design principles
 
@@ -60,11 +59,7 @@ Two structural facts that remove large parts of the wishlist:
 
 | Package | Owns |
 |---|---|
-| `lib/platform_link` | `PlatformLink<Data>` primitive — one typed link per platform, stored on any UID |
 | [`unconfirmedlabs/typed_set`](https://github.com/unconfirmedlabs/typed_set) | Bounded-set primitive — one `VecSet<T>` per key type on any UID; dup/max checks, field reclamation on empty |
-| `party_platform_link` | Party wiring: `set_link<Data>` / `clear_link` / views (events come from `platform_link`) |
-| `party_social` (payload) | Pure handle payloads: X, Instagram, Threads, TikTok, YouTube, Discord, Telegram, Reddit, Twitch, Facebook |
-| `party_music` (payload) | Pure artist-profile payloads: Spotify, Bandcamp, SoundCloud, Apple Music, Deezer, Tidal, Amazon, Audiomack |
 | `party_profile` (v1) | bio_short, bio_long, country (`country_code`), languages (`language_code`) |
 | `party_genre` | Genre-id tag set, validated against the `genre` vocabulary (`&Genre`) |
 | `music-protocol-extensions/lib/genre` | Extracted vocabulary primitive (Sui-only), shared by releases + parties |
@@ -73,8 +68,8 @@ Two structural facts that remove large parts of the wishlist:
 
 ## Phase 1 — A legible artist page + link hub (shipped)
 
-Turns a link list into a real profile: identity card, imagery, the full platform
-matrix, and prioritized calls-to-action.
+Turns a link list into a real profile: identity card, imagery, and prioritized
+calls-to-action.
 
 | Package | Owns | Notes |
 |---|---|---|
@@ -82,7 +77,6 @@ matrix, and prioritized calls-to-action.
 | `party_roles` | Artist type set — Artist/Producer/DJ/Composer/Songwriter/Band/Label/Collective + `Custom` | Closed enum, mirrors `composition_party_role` |
 | `party_tags` | Free-form moods/scenes (`VecSet<String>` via `typed_set`) | Uncurated sibling to `party_genre` |
 | `party_media` | avatar + header as one Walrus quilt (`u256` blob id) | Patch roles ("avatar"/"header") are a client convention, derived off-chain |
-| `party_pro_link` (payload) | Website, booking/management/publisher/label pages, EPK; Patreon, Substack, Ko-fi | Pure handle/full-URL payloads; attachment is `party_platform_link` |
 | `party_cta` | Ordered off-Miso call-to-action links — slim `{ label, url }`, replace-whole-list | External URLs only; on-Miso actions go to `party_featured` (Phase 2) |
 
 ---

@@ -7,17 +7,13 @@ and [README.md](README.md) for the architecture and package overview.
 ## Repository shape
 
 - `lib/*` — protocol-agnostic primitives owned by this repository (currently
-  `platform_link`). They depend only on the Sui framework: no `miso_party`, no
-  Miso. The bounded-set primitive is the immutable external package
+  none). They depend only on the Sui framework: no `miso_party`, no Miso. The
+  bounded-set primitive is the immutable external package
   [`unconfirmedlabs/typed_set`](https://github.com/unconfirmedlabs/typed_set).
   If a mechanism knows what a party is, it does not belong in `lib/`.
 - State-attaching `party_*` packages (`party_cta`, `party_genre`,
-  `party_media`, `party_platform_link`, `party_profile`, `party_roles`, and
-  `party_tags`) attach one slice to a `Party` via dynamic fields. Every write
+  `party_media`, `party_profile`, `party_roles`, and `party_tags`) attach one slice to a `Party` via dynamic fields. Every write
   is gated by `PartyAdminCap` through `party::uid_mut(cap)`.
-- `party_music`, `party_social`, and `party_pro_link` are pure payload
-  packages. They define validated values for `party_platform_link`; they do
-  not depend on or access `Party` or `PartyAdminCap`.
 - `party_group` is a relational extension: it owns optional shared `Group` state derived from a Party. Creation uses `uid_mut(cap)`; relation operations use `party::authorize(cap)` on the group owner or consenting member. It does not route value or custody capabilities.
 - Every package is self-contained: `Move.toml`, `sources/`, `tests/`,
   `README.md`.
@@ -29,10 +25,7 @@ and [README.md](README.md) for the architecture and package overview.
    protocol objects, stop — derived state is read, not stored.
 2. **Use a primitive before writing mechanics.** A bounded set of anything →
    depend on `typed_set` and keep only your element type, domain validation,
-   capacity constant, and typed events. A link to an external platform → a new
-   `Data` payload type in the appropriate payload package (`party_social`,
-   `party_music`, `party_pro_link`), wired by `party_platform_link` — zero new
-   mechanism. Only write raw `df::add`/`borrow`/`remove` when no primitive
+   capacity constant, and typed events. Only write raw `df::add`/`borrow`/`remove` when no primitive
    fits (single-value fields like `party_media` and `party_profile`).
 3. **Keep it slim.** One slice, one key, the smallest API that covers the
    feature. No speculative configurability, no helper functions with one call
@@ -44,19 +37,16 @@ and [README.md](README.md) for the architecture and package overview.
    an Action. Do not put operational workflows in an extension.
 5. **Gate every state-attaching write with the cap.** Relational writes in `party_group` mutate its own `Group` and authorize the relevant Party through `party::authorize(cap)`; they must not request the other participant's cap or expose the Group UID. Those writes take
    `&PartyAdminCap` and go through `party::uid_mut(cap)` before mutation or
-   event emission. Payload constructors are pure and have no cap parameter.
+   event emission.
 6. **Bound everything stored.** Max lengths on strings, max counts on
-   collections. Reuse `platform_link::max_identifier_length()` /
-   `max_url_length()` rather than re-declaring the same numbers — unless the
-   package deliberately stays free of the `platform_link` dependency (as
-   `party_cta` does).
+   collections.
 7. **Use exact dependency provenance.** Every Git dependency uses a full
    40-character commit SHA—never `main` or `master`—and committed manifests
    contain no local-path dependencies. Packages publish immutably; changed data
    models require a new package and explicit migration, not an upgrade.
 8. **Emit an event for each actual state change**, carrying `party_id` (`ID`).
    An indexer must be able to rebuild every field from events alone: set
-   events carry the full new value (bios, CTA lists, link payloads), add/remove
+   events carry the full new value (bios, CTA lists), add/remove
    events carry the entry, clears carry only the key. Equal-value replacements
    and absent clears emit nothing; the first attachment, including an
    explicitly empty value, emits. Enum values, never numeric codes. See

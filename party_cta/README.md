@@ -91,9 +91,8 @@ A wrong `PartyAdminCap` aborts with `EUnauthorized` (0) at
 
 ## Integrator notes
 
-- **Full URLs, stored verbatim.** Unlike `platform_link` payloads (handles
-  rebuilt into platform URLs client-side), a CTA's destination is arbitrary,
-  so the URL itself is stored. There is no scheme or host validation on-chain:
+- **Full URLs, stored verbatim.** A CTA's destination is arbitrary, so the URL
+  itself is stored. There is no scheme or host validation on-chain:
   treat labels and URLs as untrusted input — sanitize before rendering, and
   decide which schemes (e.g. `https:`) you are willing to link to.
 - **Order is the payload.** Render in stored order; do not re-sort. There are

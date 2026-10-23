@@ -1,8 +1,0 @@
-[package]
-name = "party_social"
-edition = "2024"
-license = "FSL-1.1-ALv2"
-authors = ["Miso Labs, Inc. (build@miso.fm)"]
-
-[dependencies]
-platform_link = { local = "../lib/platform_link" }
