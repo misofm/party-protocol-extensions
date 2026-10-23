@@ -64,12 +64,18 @@ public fun set_profile(
     country: Option<CountryCode>,
     languages: vector<LanguageCode>,
 ) {
-    validate_bio_short(&bio_short);
+    assert!(!bio_short.is_empty(), EEmptyBioShort);
+    assert!(bio_short.length() <= MAX_BIO_SHORT_LENGTH, EBioShortTooLong);
     bio_long.do_ref!(|bio| {
         assert!(!bio.is_empty(), EEmptyBioLong);
         assert!(bio.length() <= MAX_BIO_LONG_LENGTH, EBioLongTooLong);
     });
-    validate_languages(&languages);
+    assert!(languages.length() <= MAX_LANGUAGES, ETooManyLanguages);
+    let mut seen = vec_set::empty<LanguageCode>();
+    languages.do_ref!(|l| {
+        assert!(!seen.contains(l), EDuplicateLanguage);
+        seen.insert(*l);
+    });
 
     let party_id = object::id(party);
     let event = PartyProfileSetEvent { party_id, bio_short, bio_long, country, languages };
@@ -119,22 +125,6 @@ public fun country(self: &Profile): Option<CountryCode> {
 
 public fun languages(self: &Profile): vector<LanguageCode> {
     self.languages
-}
-
-// === Private Functions ===
-
-fun validate_bio_short(bio_short: &String) {
-    assert!(!bio_short.is_empty(), EEmptyBioShort);
-    assert!(bio_short.length() <= MAX_BIO_SHORT_LENGTH, EBioShortTooLong);
-}
-
-fun validate_languages(languages: &vector<LanguageCode>) {
-    assert!(languages.length() <= MAX_LANGUAGES, ETooManyLanguages);
-    let mut seen = vec_set::empty<LanguageCode>();
-    languages.do_ref!(|l| {
-        assert!(!seen.contains(l), EDuplicateLanguage);
-        seen.insert(*l);
-    });
 }
 
 // === Test Functions ===
