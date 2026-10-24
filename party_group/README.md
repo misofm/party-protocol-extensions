@@ -86,7 +86,7 @@ invitee may have taken the final slot. An abort rolls back invitation removal.
 
 ## Dependencies
 
-- `miso_party` at `c7c457d40bb96db9044cea55fd71532e192ab6b8`: identity-only Party,
+- `miso_party` at `c62febbd9bbf6d9630d4716d7bf8e07847072b7f`: identity-only Party,
   object-bound authorization, and cap-gated derived-object creation.
 - `typed_set` at `b37474cbde166b7ddf8a3b615cd89f90182ace6f`: bounded sets,
   duplicate/capacity checks, and empty-field reclamation.

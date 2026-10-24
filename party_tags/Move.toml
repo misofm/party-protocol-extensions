@@ -5,5 +5,5 @@ license = "FSL-1.1-ALv2"
 authors = ["Miso Labs, Inc. (build@miso.fm)"]
 
 [dependencies]
-miso_party = { git = "https://github.com/misofm/party-protocol.git", rev = "c7c457d40bb96db9044cea55fd71532e192ab6b8" }
+miso_party = { git = "https://github.com/misofm/party-protocol.git", rev = "c62febbd9bbf6d9630d4716d7bf8e07847072b7f" }
 typed_set = { git = "https://github.com/unconfirmedlabs/typed_set.git", rev = "b37474cbde166b7ddf8a3b615cd89f90182ace6f" }

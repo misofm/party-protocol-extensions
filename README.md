@@ -110,7 +110,7 @@ becomes Apache-2.0 two years after its release.
 ## Group-Extension Source Generation
 
 State-attaching packages now pin the identity-only Party core at
-`c7c457d40bb96db9044cea55fd71532e192ab6b8`. Their tests use `party::new(name, ctx)`.
+`c62febbd9bbf6d9630d4716d7bf8e07847072b7f`. Their tests use `party::new(name, ctx)`.
 The constructor no longer takes `PartyKind`, and `PartyCreatedEvent` no longer
 contains `is_group`. Existing deployed package records are retained unchanged;
 this branch does not publish a new on-chain generation.
